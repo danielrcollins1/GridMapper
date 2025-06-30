@@ -1,0 +1,9 @@
+*#
+*.exe
+*.layout
+*.o
+*.res
+*_private.h
+*_private.rc
+*.win
+xArchive
