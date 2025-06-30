@@ -7,6 +7,9 @@
 =====================================================================
 */
 
+#ifndef GRIDMAP_H
+#define GRIDMAP_H
+
 struct GridCell;
 #define GRID_FILENAME_MAX 256
 
@@ -85,6 +88,7 @@ enum {WALL_CLEAR, WALL_FILL, WALL_SINGLE_DOOR, WALL_DOUBLE_DOOR, WALL_SECRET_DOO
 enum {OBJECT_NONE, OBJECT_STATUE, OBJECT_RUBBLE, OBJECT_TRAPDOOR_FLOOR, 
   OBJECT_TRAPDOOR_CEIL};
 
+#endif
   
 /*
 =====================================================================

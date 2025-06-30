@@ -7,8 +7,9 @@
 =====================================================================
 */
 
-#include "stdafx.h"
-#include "resource.h"
+#include <windows.h>
+#include "GridMap.h"
+#include "GridMapper.h"
 
 #define MAX_LOADSTRING 100
 

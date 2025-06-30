@@ -29,7 +29,7 @@ IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=4
 CompilerSettings=0;0;0;0;0;0;0;1;0;0;1;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0
-UnitCount=8
+UnitCount=6
 
 [VersionInfo]
 Major=1
@@ -71,16 +71,6 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit4]
-FileName=GridMap.cpp
-CompileCpp=1
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit5]
 FileName=GridMapper.cpp
 CompileCpp=1
 Folder=
@@ -91,7 +81,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit6]
-FileName=StdAfx.cpp
+FileName=Resource.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -139,11 +129,20 @@ BuildCmd=
 CompileCpp=1
 
 [Unit3]
-FileName=StdAfx.h
+FileName=GridMap.cpp
 CompileCpp=1
 Folder=
 Compile=1
 Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit5]
+FileName=GridMapper.rc
+Folder=Resources
+Compile=1
+Link=0
 Priority=1000
 OverrideBuildCmd=0
 BuildCmd=

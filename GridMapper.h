@@ -7,14 +7,10 @@
 =====================================================================
 */
 
-#if !defined(AFX_GRIDMAPPER_H__9B02824D_A37E_4C56_B45D_E3F6289A210D__INCLUDED_)
-#define AFX_GRIDMAPPER_H__9B02824D_A37E_4C56_B45D_E3F6289A210D__INCLUDED_
+#ifndef GRIDMAPPER_H
+#define GRIDMAPPER_H
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-#include "resource.h"
+#include "Resource.h"
 
 // Forward declarations (DRC)
 int  GetGridSize();
@@ -50,7 +46,7 @@ void PrintMap (HWND hWnd);
 LRESULT CALLBACK NewDialog (HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK GridSizeDialog (HWND, UINT, WPARAM, LPARAM);
 
-#endif // !defined(AFX_GRIDMAPPER_H__9B02824D_A37E_4C56_B45D_E3F6289A210D__INCLUDED_)
+#endif
 
 
 /*
