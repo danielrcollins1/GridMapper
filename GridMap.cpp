@@ -15,6 +15,7 @@ const int DEFAULT_CELL_SIZE = 20;
 const int STAIRS_PER_SQUARE = 5;
 const float LETTER_S_WIDTH = 0.20;
 const float LETTER_S_HEIGHT = 0.35;
+const float SQRT2_2 = 0.70710678f;
 
 //------------------------------------------------------------------
 // Constructor/ Destructors
@@ -306,17 +307,41 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	}
 
 	// Diagonal Wall NW/SE
-	if (cell.floor == FLOOR_NWWALL) {
+	if (cell.floor == FLOOR_NWWALL
+	        || cell.floor == FLOOR_NWDOOR) {
 		SelectObject(hDC, ThickBlackPen);
 		MoveToEx(hDC, x, y, NULL);
 		LineTo(hDC, x + cellSize, y + cellSize);
 	}
 
 	// Diagonal Wall NE/SW
-	if (cell.floor == FLOOR_NEWALL) {
+	if (cell.floor == FLOOR_NEWALL
+	        || cell.floor == FLOOR_NEDOOR) {
 		SelectObject(hDC, ThickBlackPen);
 		MoveToEx(hDC, x + cellSize, y, NULL);
 		LineTo(hDC, x, y + cellSize);
+	}
+
+	// Diagonal Door (in either direction)
+	if (cell.floor == FLOOR_NEDOOR
+	        || cell.floor == FLOOR_NWDOOR) {
+		SelectObject(hDC, GetStockObject(BLACK_PEN));
+		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
+
+		// Find cell center & door corners
+		int s = cellSize / 2;
+		int cx = x + cellSize / 2;
+		int cy = y + cellSize / 2;
+		double offset = s * SQRT2_2;
+
+		// Set four corners of door & draw polygon
+		POINT pts[4] = {
+			{ (int)(cx - offset + 1), (int)(cy)       },
+			{ (int)(cx),              (int)(cy + offset) },
+			{ (int)(cx + offset),     (int)(cy)       },
+			{ (int)(cx),              (int)(cy - offset + 1) }
+		};
+		Polygon(hDC, pts, 4);
 	}
 }
 
@@ -329,7 +354,7 @@ void GridMap::paintCellNWall(HDC hDC, int x, int y, GridCell cell)
 	LineTo(hDC, x + cellSize, y);
 
 	// Set door size, pen, brush
-	int h = cellSize/4; // half door size
+	int h = cellSize / 4; // half door size
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 	SelectObject(hDC, GetStockObject(WHITE_BRUSH));
 

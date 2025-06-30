@@ -455,7 +455,7 @@ void MyLButtonHandler(HWND hWnd, LPARAM lParam)
 
 	// Determine type of selected feature
 	if (IDM_FLOOR_FILL <= selectedFeature
-	        && selectedFeature <= IDM_FLOOR_NWWALL)
+	        && selectedFeature <= IDM_FLOOR_NWDOOR)
 		FloorSelect(hWnd, xPos, yPos);
 	else if (IDM_WALL_CLEAR <= selectedFeature
 	         && selectedFeature <= IDM_WALL_SECRET_DOOR)
@@ -488,6 +488,12 @@ void FloorSelect(HWND hWnd, int xPos, int yPos)
 			break;
 		case IDM_FLOOR_NWWALL:
 			newFeature = FLOOR_NWWALL;
+			break;
+		case IDM_FLOOR_NEDOOR:
+			newFeature = FLOOR_NEDOOR;
+			break;
+		case IDM_FLOOR_NWDOOR:
+			newFeature = FLOOR_NWDOOR;
 			break;
 		default:
 			newFeature = FLOOR_FILL;

@@ -21,7 +21,7 @@ struct GridCell {
 
 // Floor options
 enum {FLOOR_FILL, FLOOR_CLEAR, FLOOR_NSTAIRS, FLOOR_WSTAIRS,
-      FLOOR_NEWALL, FLOOR_NWWALL
+      FLOOR_NEWALL, FLOOR_NWWALL, FLOOR_NEDOOR, FLOOR_NWDOOR
      };
 
 // Wall options

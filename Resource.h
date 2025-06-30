@@ -36,11 +36,13 @@
 #define IDM_FLOOR_WSTAIRS               32784
 #define IDM_FLOOR_NEWALL                32785
 #define IDM_FLOOR_NWWALL                32786
-#define IDM_WALL_CLEAR                  32787
-#define IDM_WALL_FILL                   32788
-#define IDM_WALL_SINGLE_DOOR            32789
-#define IDM_WALL_DOUBLE_DOOR            32790
-#define IDM_WALL_SECRET_DOOR            32791
+#define IDM_FLOOR_NEDOOR                32787
+#define IDM_FLOOR_NWDOOR                32788
+#define IDM_WALL_CLEAR                  32789
+#define IDM_WALL_FILL                   32790
+#define IDM_WALL_SINGLE_DOOR            32791
+#define IDM_WALL_DOUBLE_DOOR            32792
+#define IDM_WALL_SECRET_DOOR            32793
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
