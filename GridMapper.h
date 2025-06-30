@@ -1,6 +1,6 @@
 /*
 =====================================================================
-	GRIDMAPPER.H 
+	GRIDMAPPER.H
     Interface to GridMapper application.
 	Copyright (c) 2010 Daniel R. Collins. All rights reserved.
 	See the bottom of this file for any licensing information.
@@ -10,7 +10,7 @@
 #ifndef GRIDMAPPER_H
 #define GRIDMAPPER_H
 
-#include "Resource.h"
+#include "GridMap.h"
 
 // Forward declarations (DRC)
 int  GetGridSize();
@@ -21,7 +21,7 @@ void HorzScrollHandler(HWND hWnd, WPARAM wParam);
 void VertScrollHandler(HWND hWnd, WPARAM wParam);
 int  GetHorzScrollPos (HWND hWnd);
 int  GetVertScrollPos (HWND hWnd);
-void MyKeyHandler(HWND hWnd, WPARAM wParam); 
+void MyKeyHandler(HWND hWnd, WPARAM wParam);
 void MyPaintWindow (HWND hWnd);
 void MyLButtonHandler (HWND hWnd, LPARAM lParam);
 void FloorSelect (HWND hWnd, int xPos, int yPos);

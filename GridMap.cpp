@@ -8,9 +8,8 @@
 */
 
 // Includes
-#include <windows.h>
-#include <stdio.h>
 #include "GridMap.h"
+#include <stdio.h>
 
 // Globals
 #define DEFAULT_CELL_SIZE 20
@@ -23,7 +22,8 @@
 // Constructor/ Destructors
 //------------------------------------------------------------------
 
-GridMap::GridMap (int _width, int _height) {
+GridMap::GridMap (int _width, int _height)
+{
 	width = _width;
 	height = _height;
 	cellSize = DEFAULT_CELL_SIZE;
@@ -44,7 +44,8 @@ GridMap::GridMap (int _width, int _height) {
 }
 
 
-GridMap::~GridMap() {
+GridMap::~GridMap()
+{
 	for (int x = 0; x < width; x++)
 		delete [] grid[x];
 	delete [] grid;
@@ -53,7 +54,8 @@ GridMap::~GridMap() {
 
 // Open from a specified filename
 
-GridMap::GridMap (char *_filename) {
+GridMap::GridMap (char *_filename)
+{
 
 	// Declarations
 	FILE *f;
@@ -94,7 +96,8 @@ fail:
 
 // Save to previously stored filename
 
-int GridMap::save() {
+int GridMap::save()
+{
 
 	// Open file
 	FILE *f = fopen(filename, "wb");
@@ -120,43 +123,56 @@ int GridMap::save() {
 // Accessors
 //------------------------------------------------------------------
 
-int GridMap::getWidthCells() {
+int GridMap::getWidthCells()
+{
 	return width;
 }
-int GridMap::getHeightCells() {
+int GridMap::getHeightCells()
+{
 	return height;
 }
-int GridMap::getWidthPixels() {
+int GridMap::getWidthPixels()
+{
 	return width * cellSize;
 }
-int GridMap::getHeightPixels() {
+int GridMap::getHeightPixels()
+{
 	return height * cellSize;
 }
-int GridMap::getCellSizePixels() {
+int GridMap::getCellSizePixels()
+{
 	return cellSize;
 }
-int GridMap::getCellSizeDefault() {
+int GridMap::getCellSizeDefault()
+{
 	return DEFAULT_CELL_SIZE;
 }
-int GridMap::getCellFloor(int x, int y) {
+int GridMap::getCellFloor(int x, int y)
+{
 	return grid[x][y].floor;
 }
-int GridMap::getCellNWall(int x, int y) {
+int GridMap::getCellNWall(int x, int y)
+{
 	return grid[x][y].nwall;
 }
-int GridMap::getCellWWall(int x, int y) {
+int GridMap::getCellWWall(int x, int y)
+{
 	return grid[x][y].wwall;
 }
-int GridMap::getCellObject(int x, int y) {
+int GridMap::getCellObject(int x, int y)
+{
 	return grid[x][y].object;
 }
-char *GridMap::getFilename() {
+char *GridMap::getFilename()
+{
 	return filename;
 }
-bool GridMap::isChanged() {
+bool GridMap::isChanged()
+{
 	return changed;
 }
-bool GridMap::isFileLoadOk() {
+bool GridMap::isFileLoadOk()
+{
 	return fileLoadOk;
 }
 
@@ -166,37 +182,44 @@ bool GridMap::isFileLoadOk() {
 // Mutators
 //------------------------------------------------------------------
 
-void GridMap::setCellSizePixels(int _cellSize) {
+void GridMap::setCellSizePixels(int _cellSize)
+{
 	cellSize = _cellSize;
 }
 
-void GridMap::setCellFloor(int x, int y, int floor) {
+void GridMap::setCellFloor(int x, int y, int floor)
+{
 	grid[x][y].floor = floor;
 	changed = true;
 }
 
-void GridMap::setCellNWall(int x, int y, int wall) {
+void GridMap::setCellNWall(int x, int y, int wall)
+{
 	grid[x][y].nwall = wall;
 	changed = true;
 }
 
-void GridMap::setCellWWall(int x, int y, int wall) {
+void GridMap::setCellWWall(int x, int y, int wall)
+{
 	grid[x][y].wwall = wall;
 	changed = true;
 }
 
-void GridMap::setCellObject(int x, int y, int object) {
+void GridMap::setCellObject(int x, int y, int object)
+{
 	grid[x][y].object = object;
 	changed = true;
 }
 
-void GridMap::setFilename(char *name) {
+void GridMap::setFilename(char *name)
+{
 	strncpy(filename, name, GRID_FILENAME_MAX);
 }
 
 
 // Clear the entire map
-void GridMap::clearMap(int _floor) {
+void GridMap::clearMap(int _floor)
+{
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
 			grid[x][y].floor = _floor;
@@ -220,7 +243,8 @@ HPEN ThickBlackPen = NULL;
 
 // Grid painting implementations
 
-void GridMap::paint(HDC hDC) {
+void GridMap::paint(HDC hDC)
+{
 
 	// Create pens if needed
 	if (!ThickBlackPen)
@@ -237,7 +261,8 @@ void GridMap::paint(HDC hDC) {
 }
 
 
-void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls) {
+void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
+{
 
 	// Paint everything controlled by this cell
 	int xPos = x * cellSize;
@@ -257,7 +282,8 @@ void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls) {
 }
 
 
-void GridMap::paintCellFloor (HDC hDC, int x, int y, GridCell cell) {
+void GridMap::paintCellFloor (HDC hDC, int x, int y, GridCell cell)
+{
 
 	// Paint base clear or filled
 	SelectObject(hDC, GetStockObject(cell.floor ? WHITE_PEN : BLACK_PEN));
@@ -300,7 +326,8 @@ void GridMap::paintCellFloor (HDC hDC, int x, int y, GridCell cell) {
 }
 
 
-void GridMap::paintCellNWall (HDC hDC, int x, int y, GridCell cell) {
+void GridMap::paintCellNWall (HDC hDC, int x, int y, GridCell cell)
+{
 
 	// Paint base clear or filled
 	SelectObject(hDC, cell.nwall ? ThickBlackPen : ThinGrayPen);
@@ -330,7 +357,8 @@ void GridMap::paintCellNWall (HDC hDC, int x, int y, GridCell cell) {
 }
 
 
-void GridMap::paintCellWWall (HDC hDC, int x, int y, GridCell cell) {
+void GridMap::paintCellWWall (HDC hDC, int x, int y, GridCell cell)
+{
 
 	// Paint base clear or filled
 	SelectObject(hDC, cell.wwall ? ThickBlackPen : ThinGrayPen);
@@ -360,7 +388,8 @@ void GridMap::paintCellWWall (HDC hDC, int x, int y, GridCell cell) {
 }
 
 
-void GridMap::LetterS (HDC hDC, int x, int y) {
+void GridMap::LetterS (HDC hDC, int x, int y)
+{
 
 	// Compute width & height increments
 	int j = (int)((float) cellSize * LETTER_S_WIDTH);
@@ -372,7 +401,8 @@ void GridMap::LetterS (HDC hDC, int x, int y) {
 }
 
 
-void GridMap::paintCellObject (HDC hDC, int x, int y, GridCell cell) {
+void GridMap::paintCellObject (HDC hDC, int x, int y, GridCell cell)
+{
 	// For future expansion
 }
 
