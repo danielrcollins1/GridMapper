@@ -9,42 +9,39 @@
 */
 #ifndef GRIDMAPPER_H
 #define GRIDMAPPER_H
-
 #include <windows.h>
 #include "GridMap.h"
 
-// Forward declarations (DRC)
+// Function prototypes
 int  GetGridSize();
-void UpdateBkgdCell (HWND hWnd, int x, int y);
-void UpdateEntireWindow (HWND hWnd);
-void SetScrollRange (HWND hWnd, bool zeroPos);
+void UpdateBkgdCell(HWND hWnd, int x, int y);
+void UpdateEntireWindow(HWND hWnd);
+void SetScrollRange(HWND hWnd, bool zeroPos);
 void HorzScrollHandler(HWND hWnd, WPARAM wParam);
 void VertScrollHandler(HWND hWnd, WPARAM wParam);
-int  GetHorzScrollPos (HWND hWnd);
-int  GetVertScrollPos (HWND hWnd);
+int GetHorzScrollPos(HWND hWnd);
+int GetVertScrollPos(HWND hWnd);
 void MyKeyHandler(HWND hWnd, WPARAM wParam);
-void MyPaintWindow (HWND hWnd);
-void MyLButtonHandler (HWND hWnd, LPARAM lParam);
-void FloorSelect (HWND hWnd, int xPos, int yPos);
-void WallSelect (HWND hWnd, int xPos, int yPos);
+void MyPaintWindow(HWND hWnd);
+void MyLButtonHandler(HWND hWnd, LPARAM lParam);
+void FloorSelect(HWND hWnd, int xPos, int yPos);
+void WallSelect(HWND hWnd, int xPos, int yPos);
 void ChangeWestWall(HWND hWnd, int x, int y, int newFeature);
 void ChangeNorthWall(HWND hWnd, int x, int y, int newFeature);
 void ClearMap(HWND hWnd, bool clear);
 void FillCell(HWND hWnd, int x, int y);
-void SetSelectedFeature (HWND hWnd, int feature);
+void SetSelectedFeature(HWND hWnd, int feature);
 bool OkDiscardChanges(HWND hWnd);
-void SetBkgdDC (HWND hWnd);
-void ChangeGridSize (HWND hWnd, int size);
+void SetBkgdDC(HWND hWnd);
+void ChangeGridSize(HWND hWnd, int size);
 void SetNewMap(HWND hWnd, GridMap *newmap);
-bool NewMapFromSpecs (HWND hWnd, int newWidth, int newHeight);
-bool NewMapFromFile (HWND hWnd, char *filename);
-void OpenMap (HWND hWnd);
-void SaveMapAs (HWND hWnd);
-void SaveMap (HWND hWnd);
-void CopyMap (HWND hWnd);
-void PrintMap (HWND hWnd);
-
-LRESULT CALLBACK NewDialog (HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK GridSizeDialog (HWND, UINT, WPARAM, LPARAM);
-
+bool NewMapFromSpecs(HWND hWnd, int newWidth, int newHeight);
+bool NewMapFromFile(HWND hWnd, char *filename);
+void OpenMap(HWND hWnd);
+void SaveMapAs(HWND hWnd);
+void SaveMap(HWND hWnd);
+void CopyMap(HWND hWnd);
+void PrintMap(HWND hWnd);
+LRESULT CALLBACK NewDialog(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK GridSizeDialog(HWND, UINT, WPARAM, LPARAM);
 #endif

@@ -9,19 +9,42 @@
 */
 #ifndef GRIDMAP_H
 #define GRIDMAP_H
-
 #include <windows.h>
 
-struct GridCell;
-#define GRID_FILENAME_MAX 256
+/*
+	Structure for a single grid cell.
+	Controls its owns floor, north & west walls, and any object.
+*/
+struct GridCell {
+	char floor, nwall, wwall, object;
+};
 
-// GridMap Interface
+// Floor options
+enum {FLOOR_FILL, FLOOR_CLEAR, FLOOR_NSTAIRS, FLOOR_WSTAIRS,
+      FLOOR_NEWALL, FLOOR_NWWALL
+     };
 
+// Wall options
+enum {WALL_CLEAR, WALL_FILL, WALL_SINGLE_DOOR, WALL_DOUBLE_DOOR,
+      WALL_SECRET_DOOR
+     };
+
+// Object options
+enum {OBJECT_NONE, OBJECT_STATUE, OBJECT_RUBBLE,
+      OBJECT_TRAPDOOR_FLOOR, OBJECT_TRAPDOOR_CEIL
+     };
+
+const int GRID_FILENAME_MAX = 256;
+
+/*
+	GridMap interface
+*/
 class GridMap {
 	public:
+
 		// Constructors
-		GridMap (int width, int height);
-		GridMap (char *filename);
+		GridMap(int width, int height);
+		GridMap(char *filename);
 		~GridMap();
 
 		// Save to file
@@ -56,12 +79,13 @@ class GridMap {
 		void setFilename(char *name);
 
 	protected:
+
 		// Painting helper functions
-		void paintCellFloor (HDC hDC, int xPos, int yPos, GridCell cell);
-		void paintCellNWall (HDC hDC, int xPos, int yPos, GridCell cell);
-		void paintCellWWall (HDC hDC, int xPos, int yPos, GridCell cell);
-		void paintCellObject (HDC hDC, int xPos, int yPos, GridCell cell);
-		void LetterS (HDC hDC, int x, int y);
+		void paintCellFloor(HDC hDC, int xPos, int yPos, GridCell cell);
+		void paintCellNWall(HDC hDC, int xPos, int yPos, GridCell cell);
+		void paintCellWWall(HDC hDC, int xPos, int yPos, GridCell cell);
+		void paintCellObject(HDC hDC, int xPos, int yPos, GridCell cell);
+		void LetterS(HDC hDC, int x, int y);
 
 	private:
 		GridCell **grid;
@@ -69,26 +93,4 @@ class GridMap {
 		char filename[GRID_FILENAME_MAX];
 		bool changed, fileLoadOk;
 };
-
-
-//--------------------------------------------------------------
-// Grid Cell struct
-//   Each grid cell controls its own floor, north & west walls,
-//   and any object. See available enum values further below.
-//--------------------------------------------------------------
-
-struct GridCell {
-	char floor, nwall, wwall, object;
-};
-
-
-// Feature type enums
-enum {FLOOR_FILL, FLOOR_CLEAR, FLOOR_NSTAIRS, FLOOR_WSTAIRS,
-      FLOOR_NEWALL, FLOOR_NWWALL
-     };
-enum {WALL_CLEAR, WALL_FILL, WALL_SINGLE_DOOR, WALL_DOUBLE_DOOR, WALL_SECRET_DOOR};
-enum {OBJECT_NONE, OBJECT_STATUE, OBJECT_RUBBLE, OBJECT_TRAPDOOR_FLOOR,
-      OBJECT_TRAPDOOR_CEIL
-     };
-
 #endif
