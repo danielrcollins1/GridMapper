@@ -1,0 +1,230 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_GRIDMAPPER          ICON    DISCARDABLE     "GridMapper.ICO"
+IDI_SMALL               ICON    DISCARDABLE     "SMALL.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDC_GRIDMAPPER MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New...",                     IDM_NEW
+        MENUITEM "&Open...",                    IDM_OPEN
+        MENUITEM "&Save",                       IDM_SAVE
+        MENUITEM "Save &As...",                 IDM_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...",                   IDM_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "&Fill Floor",                 IDM_FLOOR_FILL
+        MENUITEM "Cl&ear Floor",                IDM_FLOOR_CLEAR
+        MENUITEM "Stairs &N/S",                 IDM_FLOOR_NSTAIRS
+        MENUITEM "Stairs E/&W",                 IDM_FLOOR_WSTAIRS
+        MENUITEM "Fill W&all",                  IDM_WALL_FILL
+        MENUITEM "Clea&r Wall",                 IDM_WALL_CLEAR
+        MENUITEM "Single &Door",                IDM_WALL_SINGLE_DOOR
+        MENUITEM "Dou&ble Door",                IDM_WALL_DOUBLE_DOOR
+        MENUITEM "&Secret Door",                IDM_WALL_SECRET_DOOR
+        MENUITEM SEPARATOR
+        MENUITEM "Fill Entire Map",             IDM_FILL_MAP
+        MENUITEM "Clear Entire Map",            IDM_CLEAR_MAP
+        MENUITEM "Set Grid Size...",            IDM_SET_GRID_SIZE
+        MENUITEM SEPARATOR
+        MENUITEM "&Copy to Clipboard",          IDM_COPY
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About GridMapper...",        IDM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDC_GRIDMAPPER ACCELERATORS MOVEABLE PURE 
+BEGIN
+    "/",            IDM_ABOUT,              ASCII,  ALT, NOINVERT
+    "?",            IDM_ABOUT,              ASCII,  ALT, NOINVERT
+    "C",            IDM_COPY,               VIRTKEY, CONTROL, NOINVERT
+    "N",            IDM_NEW,                VIRTKEY, CONTROL, NOINVERT
+    "O",            IDM_OPEN,               VIRTKEY, CONTROL, NOINVERT
+    "P",            IDM_PRINT,              VIRTKEY, CONTROL, NOINVERT
+    "S",            IDM_SAVE,               VIRTKEY, CONTROL, NOINVERT
+    "X",            IDM_EXIT,               VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  22, 17, 178, 43
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 10, "System"
+BEGIN
+    ICON            IDI_GRIDMAPPER,IDC_MYICON,9,8,20,20
+    LTEXT           "GridMapper Version 1.0",IDC_STATIC,40,6,78,8,
+                    SS_NOPREFIX
+    LTEXT           "Copyright (C) 2010",IDC_STATIC,40,16,61,8
+    DEFPUSHBUTTON   "OK",IDOK,143,4,30,11,WS_GROUP
+    LTEXT           "By Daniel R. ""Delta"" Collins",IDC_STATIC,40,26,101,8
+END
+
+IDD_NEWMAP DIALOG DISCARDABLE  25, 25, 117, 47
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "New Map Size"
+FONT 10, "System"
+BEGIN
+    LTEXT           "Width",IDC_STATIC,7,9,24,8
+    LTEXT           "Height",IDC_STATIC,7,26,24,8
+    EDITTEXT        IDC_NEW_WIDTH,35,7,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_NEW_HEIGHT,35,24,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    DEFPUSHBUTTON   "OK",IDOK,74,7,36,13
+    PUSHBUTTON      "Cancel",IDCANCEL,74,24,36,12
+END
+
+IDD_SETGRIDSIZE DIALOG DISCARDABLE  25, 25, 165, 40
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Set Grid Size"
+FONT 10, "System"
+BEGIN
+    LTEXT           "Pixels per Square:",IDC_STATIC,29,7,66,8
+    EDITTEXT        IDC_PXLS_PER_SQUARE,100,5,31,13,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    DEFPUSHBUTTON   "OK",IDOK,7,23,45,11
+    PUSHBUTTON      "Cancel",IDCANCEL,58,23,45,11
+    PUSHBUTTON      "Default",IDC_DEFAULT,109,23,47,11
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        RIGHTMARGIN, 173
+        BOTTOMMARGIN, 37
+    END
+
+    IDD_NEWMAP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 110
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 40
+    END
+
+    IDD_SETGRIDSIZE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 158
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 34
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APP_TITLE           "GridMapper"
+    IDC_GRIDMAPPER          "GRIDMAPPER"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
