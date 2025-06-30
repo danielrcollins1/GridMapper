@@ -1,10 +1,11 @@
 /*
-=====================================================================
-	GRIDMAP.CPP
-    Implementation of the GridMap class.
-	Copyright (c) 2010 Daniel R. Collins. All rights reserved.
-	See the bottom of this file for any licensing information.
-=====================================================================
+	Name: GridMap.cpp
+	Copyright: 2010
+	Author: Daniel R. Collins
+	Date: 16-05-10
+	Description: Implementation of the GridMap class.
+		See file LICENSE for licensing information.
+		Contact author at delta@superdan.net
 */
 
 // Includes
@@ -405,28 +406,3 @@ void GridMap::paintCellObject (HDC hDC, int x, int y, GridCell cell)
 {
 	// For future expansion
 }
-
-
-/*
-=====================================================================
-LICENSING INFORMATION
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-USA
-
-The author may be contacted by email at: delta@superdan.net
-=====================================================================
-*/
-
