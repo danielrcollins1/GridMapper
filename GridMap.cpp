@@ -329,17 +329,17 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
 
 		// Find cell center & door corners
-		int s = cellSize / 2;
-		int cx = x + cellSize / 2;
-		int cy = y + cellSize / 2;
-		double offset = s * SQRT2_2;
+		int halfCell = cellSize / 2;
+		int cx = x + halfCell;
+		int cy = y + halfCell;
+		int offset = (int)(halfCell * SQRT2_2);
 
 		// Set four corners of door & draw polygon
 		POINT pts[4] = {
-			{ (int)(cx - offset + 1), (int)(cy)       },
-			{ (int)(cx),              (int)(cy + offset) },
-			{ (int)(cx + offset),     (int)(cy)       },
-			{ (int)(cx),              (int)(cy - offset + 1) }
+			{cx - offset, cy},
+			{cx, cy + offset},
+			{cx + offset, cy},
+			{cx, cy - offset}
 		};
 		Polygon(hDC, pts, 4);
 	}
@@ -384,7 +384,7 @@ void GridMap::paintCellWWall(HDC hDC, int x, int y, GridCell cell)
 	LineTo(hDC, x, y + cellSize);
 
 	// Set door size, pen, brush
-	int h = cellSize/4; // half door size
+	int h = cellSize / 4; // half door size
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 	SelectObject(hDC, GetStockObject(WHITE_BRUSH));
 
@@ -409,8 +409,8 @@ void GridMap::paintCellWWall(HDC hDC, int x, int y, GridCell cell)
 void GridMap::LetterS(HDC hDC, int x, int y)
 {
 	// Compute width & height increments
-	int j = (int)((float) cellSize * LETTER_S_WIDTH);
-	int k = (int)((float) cellSize * LETTER_S_HEIGHT);
+	int j = (int)(cellSize * LETTER_S_WIDTH);
+	int k = (int)(cellSize * LETTER_S_HEIGHT);
 
 	// Center the "S" at (x,y)
 	Arc(hDC, x-j, y-k, x+j, y, x+j, y-k/2, x, y);
