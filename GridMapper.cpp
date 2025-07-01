@@ -9,12 +9,14 @@
 */
 #include "GridMapper.h"
 #include "Resource.h"
+#include <sstream>
 
 // Constants
 const int MAX_LOADSTRING = 100;
 const int DefaultMapWidth = 40;
 const int DefaultMapHeight = 30;
 const int DefaultPrintSquaresPerInch = 4;
+const int MinimumGridSize = 10;
 const char DefaultFileExt[] = "gmap";
 const char FileFilterStr[] = "GridMapper Files (*.gmap)\0*.gmap\0";
 
@@ -148,6 +150,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		case WM_VSCROLL:
 			VertScrollHandler(hWnd, wParam);
+			break;
+		case WM_MOUSEWHEEL:
+			ScrollWheelHandler(hWnd, wParam);
 			break;
 		case WM_KEYDOWN:
 			MyKeyHandler(hWnd, wParam);
@@ -371,6 +376,35 @@ void VertScrollHandler(HWND hWnd, WPARAM wParam)
 	}
 	SetScrollInfo(hWnd, SB_VERT, &info, true);
 	UpdateEntireWindow(hWnd);
+}
+
+void ScrollWheelHandler(HWND hWnd, WPARAM wParam)
+{
+	// Get adjustment steps
+	int wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+	int steps = wheelDelta / 120;
+
+	// Handle zoom-in or out (Ctrl pressed)
+	if (wParam & MK_CONTROL) {
+		int newSize = GetGridSize() + steps;
+		if (newSize < MinimumGridSize) {
+			newSize = MinimumGridSize;
+		}
+		ChangeGridSize(hWnd, newSize);
+	}
+
+	// Handle movement of scrollbars
+	else {
+		// Get scrollbar info
+		SCROLLINFO info = {sizeof(SCROLLINFO), SIF_ALL, 0, 0, 0, 0, 0};
+		int scrollBar = wParam & MK_SHIFT ? SB_HORZ : SB_VERT;
+		GetScrollInfo(hWnd, scrollBar, &info);
+
+		// Set new scrollbar position
+		info.nPos -= steps * GetGridSize();
+		SetScrollInfo(hWnd, scrollBar, &info, true);
+		UpdateEntireWindow(hWnd);
+	}
 }
 
 int GetHorzScrollPos(HWND hWnd)
@@ -886,8 +920,11 @@ LRESULT CALLBACK GridSizeDialog(HWND hDlg, UINT message,
 				                            FALSE);
 
 				// Check minimum size re: stairs-per-square * 2
-				if (newSize < 10) {
-					MessageBox(hDlg, "Minimum grid size 10 pixels per square.",
+				if (newSize < MinimumGridSize) {
+					std::stringstream message;
+					message << "Minimum grid size is "
+					        << MinimumGridSize << " pixels per square.";
+					MessageBox(hDlg, message.str().c_str(),
 					           "Size Too Small", MB_OK|MB_ICONWARNING);
 				}
 				else {

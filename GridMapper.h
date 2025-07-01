@@ -19,6 +19,7 @@ void UpdateEntireWindow(HWND hWnd);
 void SetScrollRange(HWND hWnd, bool zeroPos);
 void HorzScrollHandler(HWND hWnd, WPARAM wParam);
 void VertScrollHandler(HWND hWnd, WPARAM wParam);
+void ScrollWheelHandler(HWND hWnd, WPARAM wParam);
 int GetHorzScrollPos(HWND hWnd);
 int GetVertScrollPos(HWND hWnd);
 void MyKeyHandler(HWND hWnd, WPARAM wParam);
