@@ -17,6 +17,7 @@ const int DefaultMapWidth = 40;
 const int DefaultMapHeight = 30;
 const int DefaultPrintSquaresPerInch = 4;
 const int MinimumGridSize = 12;
+const int ScrollWheelIncrement = 120;
 const char DefaultFileExt[] = "gmap";
 const char FileFilterStr[] = "GridMapper Files (*.gmap)\0*.gmap\0";
 
@@ -382,7 +383,7 @@ void ScrollWheelHandler(HWND hWnd, WPARAM wParam)
 {
 	// Get adjustment steps
 	int wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-	int steps = wheelDelta / 120;
+	int steps = wheelDelta / ScrollWheelIncrement;
 
 	// Handle zoom-in or out (Ctrl pressed)
 	if (wParam & MK_CONTROL) {
