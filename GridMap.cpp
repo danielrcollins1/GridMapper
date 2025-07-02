@@ -9,10 +9,14 @@
 */
 #include "GridMap.h"
 #include <stdio.h>
+#include <algorithm>
+using std::min;
+using std::max;
 
 // Constants
 const int DEFAULT_CELL_SIZE = 20;
 const int STAIRS_PER_SQUARE = 5;
+const int WATER_LINES_PER_EDGE = 4;
 const float LETTER_S_WIDTH = 0.20;
 const float LETTER_S_HEIGHT = 0.35;
 const float SQRT2_2 = 0.70710678f;
@@ -286,12 +290,12 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	SelectObject(hDC, GetStockObject(cell.floor ? WHITE_BRUSH : BLACK_BRUSH));
 	Rectangle(hDC, x, y, x + cellSize, y + cellSize);
 
-	// Set stairs size, pen
-	int h = cellSize / STAIRS_PER_SQUARE;
+	// Set pen for other features
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 
 	// Stairs N/S
 	if (cell.floor == FLOOR_NSTAIRS) {
+		int h = cellSize / STAIRS_PER_SQUARE;
 		for (int dy = 0; dy < cellSize; dy+=h) {
 			MoveToEx(hDC, x, y + dy, NULL);
 			LineTo(hDC, x + cellSize, y + dy);
@@ -300,9 +304,35 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 
 	// Stairs E/W
 	if (cell.floor == FLOOR_WSTAIRS) {
+		int h = cellSize / STAIRS_PER_SQUARE;
 		for (int dx = 0; dx < cellSize; dx+=h) {
 			MoveToEx(hDC, x + dx, y, NULL);
 			LineTo(hDC, x + dx, y + cellSize);
+		}
+	}
+
+	// Water texture
+	if (cell.floor == FLOOR_WATER) {
+		int h = cellSize / WATER_LINES_PER_EDGE;
+
+		// Draw lines from top-left to bottom-right
+		for (int offset = -cellSize; offset <= cellSize; offset += h) {
+			int startX = x + max(0, offset);
+			int startY = y + max(0, -offset);
+			int endX = x + min(cellSize, cellSize + offset);
+			int endY = y + min(cellSize, cellSize - offset);
+			MoveToEx(hDC, startX, startY, NULL);
+			LineTo(hDC, endX, endY);
+		}
+
+		// Draw lines from top-right to bottom-left
+		for (int offset = 1; offset <= 2 * cellSize; offset += h) {
+			int startX = x + min(cellSize, offset);
+			int startY = y + max(0, offset - cellSize);
+			int endX = x + max(0, offset - cellSize);
+			int endY = y + min(cellSize, offset);
+			MoveToEx(hDC, startX, startY, NULL);
+			LineTo(hDC, endX, endY);
 		}
 	}
 

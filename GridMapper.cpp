@@ -16,7 +16,7 @@ const int MAX_LOADSTRING = 100;
 const int DefaultMapWidth = 40;
 const int DefaultMapHeight = 30;
 const int DefaultPrintSquaresPerInch = 4;
-const int MinimumGridSize = 10;
+const int MinimumGridSize = 12;
 const char DefaultFileExt[] = "gmap";
 const char FileFilterStr[] = "GridMapper Files (*.gmap)\0*.gmap\0";
 
@@ -510,6 +510,9 @@ void FloorSelect(HWND hWnd, int xPos, int yPos)
 			break;
 		case IDM_FLOOR_CLEAR:
 			newFeature = FLOOR_CLEAR;
+			break;
+		case IDM_FLOOR_WATER:
+			newFeature = FLOOR_WATER;
 			break;
 		case IDM_FLOOR_NSTAIRS:
 			newFeature = FLOOR_NSTAIRS;

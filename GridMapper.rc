@@ -54,6 +54,7 @@ BEGIN
     BEGIN
         MENUITEM "&Fill Floor",                 IDM_FLOOR_FILL
         MENUITEM "Cl&ear Floor",                IDM_FLOOR_CLEAR
+        MENUITEM "Watery Floor",                IDM_FLOOR_WATER
         MENUITEM "Stairs &N/S",                 IDM_FLOOR_NSTAIRS
         MENUITEM "Stairs E/&W",                 IDM_FLOOR_WSTAIRS
 		MENUITEM "Diagonal NE/SW",              IDM_FLOOR_NEWALL
