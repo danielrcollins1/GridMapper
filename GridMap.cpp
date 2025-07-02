@@ -17,8 +17,7 @@ using std::max;
 const int DEFAULT_CELL_SIZE = 20;
 const int STAIRS_PER_SQUARE = 5;
 const int WATER_LINES_PER_EDGE = 4;
-const float LETTER_S_WIDTH = 0.20;
-const float LETTER_S_HEIGHT = 0.35;
+const float LETTER_S_HEIGHT = 0.70;
 const float SQRT2_2 = 0.70710678f;
 
 //------------------------------------------------------------------
@@ -431,20 +430,50 @@ void GridMap::paintCellWWall(HDC hDC, int x, int y, GridCell cell)
 
 	// Secret door
 	if (cell.wwall == WALL_SECRET_DOOR) {
-		LetterS(hDC, x, y+h*2);
+		LetterS(hDC, x, y+h*2+1);
 	}
 }
 
-// Paint the letter 'S' (a secret door)
+/*
+	Paint letter 'S' centered at (x, y)
+	Represents a secret door
+	Also paints background behind letter
+*/
 void GridMap::LetterS(HDC hDC, int x, int y)
 {
-	// Compute width & height increments
-	int j = (int)(cellSize * LETTER_S_WIDTH);
-	int k = (int)(cellSize * LETTER_S_HEIGHT);
+	int fontHeight = (int) (cellSize * LETTER_S_HEIGHT);
 
-	// Center the "S" at (x,y)
-	Arc(hDC, x-j, y-k, x+j, y, x+j, y-k/2, x, y);
-	Arc(hDC, x-j, y, x+j, y+k, x-j, y+k/2, x, y);
+	// Create a font with desired height
+	HFONT hFont =
+	    CreateFont(
+	        -fontHeight,             // Height of font
+	        0,                       // Width (0 = default)
+	        0, 0,                    // Escapement & Orientation
+	        FW_NORMAL,               // Weight
+	        FALSE, FALSE, FALSE,     // Italic, Underline, Strikeout
+	        ANSI_CHARSET,
+	        OUT_TT_PRECIS,
+	        CLIP_DEFAULT_PRECIS,
+	        DEFAULT_QUALITY,
+	        DEFAULT_PITCH | FF_DONTCARE,
+	        TEXT("Arial"));
+
+	HFONT hOldFont = (HFONT) SelectObject(hDC, hFont);
+
+	// Measure text size
+	SIZE textSize;
+	GetTextExtentPoint32(hDC, TEXT("S"), 1, &textSize);
+
+	// Compute top-left of text to center it at (x, y)
+	int textX = x - textSize.cx / 2;
+	int textY = y - textSize.cy / 2;
+
+	// Draw the letter "S"
+	TextOut(hDC, textX, textY, TEXT("S"), 1);
+
+	// Clean up
+	SelectObject(hDC, hOldFont);
+	DeleteObject(hFont);
 }
 
 // Paint one cell's object
