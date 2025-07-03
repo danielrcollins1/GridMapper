@@ -201,7 +201,7 @@ bool CommandProc(HWND hWnd, int cmdId)
 	}
 
 	// Catch feature-to-draw Tool selections
-	if (IDM_FLOOR_FILL <= cmdId && cmdId <= IDM_WALL_SECRET_DOOR) {
+	if (IDM_FLOOR_FILL <= cmdId && cmdId <= IDM_END_TOOLS_LIST) {
 		SetSelectedFeature(hWnd, cmdId);
 		return true;
 	}
@@ -488,12 +488,10 @@ void MyLButtonHandler(HWND hWnd, LPARAM lParam)
 	        || yPos >= gridmap->getHeightPixels())
 		return;
 
-	// Determine type of selected feature
-	if (IDM_FLOOR_FILL <= selectedFeature
-	        && selectedFeature <= IDM_FLOOR_NWDOOR)
+	// Handle floor vs. wall features separately
+	if (IsFloorFeature(selectedFeature))
 		FloorSelect(hWnd, xPos, yPos);
-	else if (IDM_WALL_CLEAR <= selectedFeature
-	         && selectedFeature <= IDM_WALL_SECRET_DOOR)
+	else if (IsWallFeature(selectedFeature))
 		WallSelect(hWnd, xPos, yPos);
 }
 
@@ -504,38 +502,7 @@ void FloorSelect(HWND hWnd, int xPos, int yPos)
 	int y = yPos / GetGridSize();
 
 	// Convert menu item to feature enum
-	int newFeature;
-	switch (selectedFeature) {
-		case IDM_FLOOR_FILL:
-			newFeature = FLOOR_FILL;
-			break;
-		case IDM_FLOOR_CLEAR:
-			newFeature = FLOOR_CLEAR;
-			break;
-		case IDM_FLOOR_WATER:
-			newFeature = FLOOR_WATER;
-			break;
-		case IDM_FLOOR_NSTAIRS:
-			newFeature = FLOOR_NSTAIRS;
-			break;
-		case IDM_FLOOR_WSTAIRS:
-			newFeature = FLOOR_WSTAIRS;
-			break;
-		case IDM_FLOOR_NEWALL:
-			newFeature = FLOOR_NEWALL;
-			break;
-		case IDM_FLOOR_NWWALL:
-			newFeature = FLOOR_NWWALL;
-			break;
-		case IDM_FLOOR_NEDOOR:
-			newFeature = FLOOR_NEDOOR;
-			break;
-		case IDM_FLOOR_NWDOOR:
-			newFeature = FLOOR_NWDOOR;
-			break;
-		default:
-			newFeature = FLOOR_FILL;
-	}
+	int newFeature = GetMapFeatureFromMenu(selectedFeature);
 
 	// If this is an actual change, do it & update window
 	if (newFeature != gridmap->getCellFloor(x, y)) {
@@ -571,26 +538,7 @@ void WallSelect(HWND hWnd, int xPos, int yPos)
 	if (dx < INC*2 && dy < INC*2) return;
 
 	// Convert menu item to feature enum
-	int newFeature;
-	switch (selectedFeature) {
-		case IDM_WALL_CLEAR:
-			newFeature = WALL_CLEAR;
-			break;
-		case IDM_WALL_FILL:
-			newFeature = WALL_FILL;
-			break;
-		case IDM_WALL_SINGLE_DOOR:
-			newFeature = WALL_SINGLE_DOOR;
-			break;
-		case IDM_WALL_DOUBLE_DOOR:
-			newFeature = WALL_DOUBLE_DOOR;
-			break;
-		case IDM_WALL_SECRET_DOOR:
-			newFeature = WALL_SECRET_DOOR;
-			break;
-		default:
-			newFeature = WALL_CLEAR;
-	}
+	int newFeature = GetMapFeatureFromMenu(selectedFeature);
 
 	// Change appropriate wall
 	if (dx < dy)
@@ -663,6 +611,79 @@ void FillCell(HWND hWnd, int x, int y)
 	UpdateEntireWindow(hWnd);
 }
 
+// Map a menu item to a grid map cell feature
+int GetMapFeatureFromMenu(int menuID)
+{
+	switch (menuID) {
+
+		// Floor features
+		case IDM_FLOOR_FILL:
+			return FLOOR_FILL;
+		case IDM_FLOOR_CLEAR:
+			return FLOOR_CLEAR;
+		case IDM_FLOOR_WATER:
+			return FLOOR_WATER;
+		case IDM_FLOOR_NSTAIRS:
+			return FLOOR_NSTAIRS;
+		case IDM_FLOOR_WSTAIRS:
+			return FLOOR_WSTAIRS;
+		case IDM_FLOOR_NEWALL:
+			return FLOOR_NEWALL;
+		case IDM_FLOOR_NWWALL:
+			return FLOOR_NWWALL;
+		case IDM_FLOOR_NEDOOR:
+			return FLOOR_NEDOOR;
+		case IDM_FLOOR_NWDOOR:
+			return FLOOR_NWDOOR;
+
+		// Wall features
+		case IDM_WALL_CLEAR:
+			return WALL_CLEAR;
+		case IDM_WALL_FILL:
+			return WALL_FILL;
+		case IDM_WALL_SINGLE_DOOR:
+			return WALL_SINGLE_DOOR;
+		case IDM_WALL_DOUBLE_DOOR:
+			return WALL_DOUBLE_DOOR;
+		case IDM_WALL_SECRET_DOOR:
+			return WALL_SECRET_DOOR;
+		default:
+			return WALL_CLEAR;
+	}
+}
+
+// Is this menu item indicating a grid map floor feature?
+bool IsFloorFeature(int menuID)
+{
+	switch (menuID) {
+		case IDM_FLOOR_FILL:
+		case IDM_FLOOR_CLEAR:
+		case IDM_FLOOR_WATER:
+		case IDM_FLOOR_NSTAIRS:
+		case IDM_FLOOR_WSTAIRS:
+		case IDM_FLOOR_NEWALL:
+		case IDM_FLOOR_NWWALL:
+		case IDM_FLOOR_NEDOOR:
+		case IDM_FLOOR_NWDOOR:
+			return true;
+	}
+	return false;
+}
+
+// Is this menu item indicating a grid map wall feature?
+bool IsWallFeature(int menuID)
+{
+	switch (menuID) {
+		case IDM_WALL_CLEAR:
+		case IDM_WALL_FILL:
+		case IDM_WALL_SINGLE_DOOR:
+		case IDM_WALL_DOUBLE_DOOR:
+		case IDM_WALL_SECRET_DOOR:
+			return true;
+	}
+	return false;
+}
+
 //-----------------------------------------------------------------------------
 // Menu actions
 //-----------------------------------------------------------------------------
@@ -670,7 +691,7 @@ void FillCell(HWND hWnd, int x, int y)
 void SetSelectedFeature(HWND hWnd, int feature)
 {
 	selectedFeature = feature;
-	CheckMenuRadioItem(GetMenu(hWnd), IDM_FLOOR_FILL, IDM_WALL_SECRET_DOOR,
+	CheckMenuRadioItem(GetMenu(hWnd), IDM_FLOOR_FILL, IDM_END_TOOLS_LIST,
 	                   feature, MF_BYCOMMAND);
 }
 

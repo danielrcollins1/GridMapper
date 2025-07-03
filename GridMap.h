@@ -19,6 +19,12 @@ struct GridCell {
 	char floor, nwall, wwall, object;
 };
 
+/*
+	Enumerations for cell contents.
+	Never reorder/renumber these, 
+	or you'll break the saved file format!
+*/
+
 // Floor options
 enum {FLOOR_FILL, FLOOR_CLEAR, FLOOR_NSTAIRS, FLOOR_WSTAIRS,
       FLOOR_NEWALL, FLOOR_NWWALL, FLOOR_NEDOOR, FLOOR_NWDOOR,
@@ -35,6 +41,7 @@ enum {OBJECT_NONE, OBJECT_STATUE, OBJECT_RUBBLE,
       OBJECT_TRAPDOOR_FLOOR, OBJECT_TRAPDOOR_CEIL
      };
 
+// Filename max length
 const int GRID_FILENAME_MAX = 256;
 
 /*

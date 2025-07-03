@@ -52,21 +52,22 @@ BEGIN
     END
     POPUP "&Tools"
     BEGIN
-        MENUITEM "&Fill Floor",                 IDM_FLOOR_FILL
-        MENUITEM "Cl&ear Floor",                IDM_FLOOR_CLEAR
-        MENUITEM "Watery Floor",                IDM_FLOOR_WATER
-        MENUITEM "Stairs &N/S",                 IDM_FLOOR_NSTAIRS
-        MENUITEM "Stairs E/&W",                 IDM_FLOOR_WSTAIRS
-		MENUITEM "Diagonal NE/SW",              IDM_FLOOR_NEWALL
-		MENUITEM "Diagonal NW/SE",              IDM_FLOOR_NWWALL
+        MENUITEM "&Fill Space",                 IDM_FLOOR_FILL
+        MENUITEM "&Open Space",                 IDM_FLOOR_CLEAR
+        MENUITEM "&Water Space",                IDM_FLOOR_WATER
+        MENUITEM "Stairs N/S",                  IDM_FLOOR_NSTAIRS
+        MENUITEM "Stairs E/W",                  IDM_FLOOR_WSTAIRS
+        MENUITEM SEPARATOR
+        MENUITEM "Fill Wall",                   IDM_WALL_FILL
+        MENUITEM "Open Wall",                   IDM_WALL_CLEAR
+        MENUITEM "Single Door",                 IDM_WALL_SINGLE_DOOR
+        MENUITEM "Double Door",                 IDM_WALL_DOUBLE_DOOR
+        MENUITEM "Secret Door",                 IDM_WALL_SECRET_DOOR
+        MENUITEM SEPARATOR
+        MENUITEM "Diagonal Wall NE/SW",         IDM_FLOOR_NEWALL
+        MENUITEM "Diagonal Wall NW/SE",         IDM_FLOOR_NWWALL
         MENUITEM "Single Door NE/SW",           IDM_FLOOR_NEDOOR
         MENUITEM "Single Door NW/SE",           IDM_FLOOR_NWDOOR
-        MENUITEM SEPARATOR
-		MENUITEM "Fill W&all",                  IDM_WALL_FILL
-        MENUITEM "Clea&r Wall",                 IDM_WALL_CLEAR
-        MENUITEM "Single &Door",                IDM_WALL_SINGLE_DOOR
-        MENUITEM "Dou&ble Door",                IDM_WALL_DOUBLE_DOOR
-        MENUITEM "&Secret Door",                IDM_WALL_SECRET_DOOR
         MENUITEM SEPARATOR
         MENUITEM "Fill Entire Map",             IDM_FILL_MAP
         MENUITEM "Clear Entire Map",            IDM_CLEAR_MAP

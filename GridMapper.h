@@ -45,4 +45,7 @@ void CopyMap(HWND hWnd);
 void PrintMap(HWND hWnd);
 LRESULT CALLBACK NewDialog(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK GridSizeDialog(HWND, UINT, WPARAM, LPARAM);
+int GetMapFeatureFromMenu(int menuID);
+bool IsFloorFeature(int menuID);
+bool IsWallFeature(int menuID);
 #endif
