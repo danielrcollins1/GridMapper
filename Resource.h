@@ -44,6 +44,10 @@
 #define IDM_FLOOR_WATER                 32792
 #define IDM_FLOOR_NEDOOR                32793
 #define IDM_FLOOR_NWDOOR                32794
+#define IDM_FLOOR_NWFILL                32795
+#define IDM_FLOOR_NEFILL                32796
+#define IDM_FLOOR_SWFILL                32797
+#define IDM_FLOOR_SEFILL                32798
 #define IDM_END_TOOLS_LIST              33000
 #define IDC_STATIC                      -1
 

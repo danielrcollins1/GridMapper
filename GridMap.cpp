@@ -169,11 +169,6 @@ int GridMap::getCellObject(int x, int y)
 	return grid[x][y].object;
 }
 
-char *GridMap::getFilename()
-{
-	return filename;
-}
-
 bool GridMap::isChanged()
 {
 	return changed;
@@ -182,6 +177,57 @@ bool GridMap::isChanged()
 bool GridMap::isFileLoadOk()
 {
 	return fileLoadOk;
+}
+
+char* GridMap::getFilename()
+{
+	return filename;
+}
+
+/*
+	Can we erect a wall partition to the north of a given cell?
+	Prohibited if spaced filled on either side.
+*/
+bool GridMap::canBuildNWall(int x, int y)
+{
+	if (y == 0)            // on top border
+		return false;
+	switch (getCellFloor(x, y-1)) {
+		case FLOOR_FILL:
+		case FLOOR_SWFILL:
+		case FLOOR_SEFILL:
+			return false;		
+	}
+	switch (getCellFloor(x, y)) {
+		case FLOOR_FILL:
+		case FLOOR_NWFILL:
+		case FLOOR_NEFILL:
+			return false;		
+	}
+	return true;		
+}
+
+/*
+	Can we erect a wall partition to the west of a given cell?
+	Prohibited if spaced filled on either side.
+*/
+bool GridMap::canBuildWWall(int x, int y)
+{
+	if (x == 0)            // on left border
+		return false;	
+	switch (getCellFloor(x-1, y)) {
+		case FLOOR_FILL:
+		case FLOOR_NEFILL:
+		case FLOOR_SEFILL:
+			return false;		
+	}
+	switch (getCellFloor(x, y)) {
+		case FLOOR_FILL:
+		case FLOOR_NWFILL:
+		case FLOOR_SWFILL:
+			return false;		
+	}
+	return true;		
 }
 
 //------------------------------------------------------------------
@@ -371,6 +417,39 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 			{cx, cy - offset}
 		};
 		Polygon(hDC, pts, 4);
+	}
+
+	// Diagonal half-fill
+	if (cell.floor == FLOOR_NEFILL || cell.floor == FLOOR_NWFILL
+	        || cell.floor == FLOOR_SEFILL || cell.floor == FLOOR_SWFILL) {
+
+		POINT triangle[3];
+
+		switch (cell.floor) {
+			case FLOOR_NWFILL:
+				triangle[0] = { x, y };                        // Top-left
+				triangle[1] = { x + cellSize, y };            // Top-right
+				triangle[2] = { x, y + cellSize };            // Bottom-left
+				break;
+			case FLOOR_NEFILL:
+				triangle[0] = { x + cellSize, y };            // Top-right
+				triangle[1] = { x + cellSize, y + cellSize }; // Bottom-right
+				triangle[2] = { x, y };                       // Top-left
+				break;
+			case FLOOR_SWFILL:
+				triangle[0] = { x, y + cellSize };            // Bottom-left
+				triangle[1] = { x, y };                       // Top-left
+				triangle[2] = { x + cellSize, y + cellSize }; // Bottom-right
+				break;
+			case FLOOR_SEFILL:
+				triangle[0] = { x + cellSize, y + cellSize }; // Bottom-right
+				triangle[1] = { x, y + cellSize };            // Bottom-left
+				triangle[2] = { x + cellSize, y };            // Top-right
+				break;
+		}
+
+		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+		Polygon(hDC, triangle, 3);
 	}
 }
 

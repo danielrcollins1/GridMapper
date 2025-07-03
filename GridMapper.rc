@@ -52,8 +52,8 @@ BEGIN
     END
     POPUP "&Tools"
     BEGIN
-        MENUITEM "&Fill Space",                 IDM_FLOOR_FILL
         MENUITEM "&Open Space",                 IDM_FLOOR_CLEAR
+        MENUITEM "&Fill Space",                 IDM_FLOOR_FILL
         MENUITEM "&Water Space",                IDM_FLOOR_WATER
         MENUITEM "Stairs N/S",                  IDM_FLOOR_NSTAIRS
         MENUITEM "Stairs E/W",                  IDM_FLOOR_WSTAIRS
@@ -64,6 +64,10 @@ BEGIN
         MENUITEM "Double Door",                 IDM_WALL_DOUBLE_DOOR
         MENUITEM "Secret Door",                 IDM_WALL_SECRET_DOOR
         MENUITEM SEPARATOR
+        MENUITEM "Diagonal Fill NE",            IDM_FLOOR_NEFILL
+        MENUITEM "Diagonal Fill SW",            IDM_FLOOR_SWFILL
+        MENUITEM "Diagonal Fill NW",            IDM_FLOOR_NWFILL
+        MENUITEM "Diagonal Fill SE",            IDM_FLOOR_SEFILL
         MENUITEM "Diagonal Wall NE/SW",         IDM_FLOOR_NEWALL
         MENUITEM "Diagonal Wall NW/SE",         IDM_FLOOR_NWWALL
         MENUITEM "Single Door NE/SW",           IDM_FLOOR_NEDOOR

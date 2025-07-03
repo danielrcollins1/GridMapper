@@ -48,4 +48,5 @@ LRESULT CALLBACK GridSizeDialog(HWND, UINT, WPARAM, LPARAM);
 int GetMapFeatureFromMenu(int menuID);
 bool IsFloorFeature(int menuID);
 bool IsWallFeature(int menuID);
+bool IsFillFeature(int feature);
 #endif

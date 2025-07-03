@@ -506,13 +506,11 @@ void FloorSelect(HWND hWnd, int xPos, int yPos)
 
 	// If this is an actual change, do it & update window
 	if (newFeature != gridmap->getCellFloor(x, y)) {
-		if (newFeature == FLOOR_FILL) {
+		gridmap->setCellFloor(x, y, newFeature);
+		if (IsFillFeature(newFeature))
 			FillCell(hWnd, x, y);
-		}
-		else {
-			gridmap->setCellFloor(x, y, newFeature);
+		else		
 			UpdateBkgdCell(hWnd, x, y);
-		}
 	}
 }
 
@@ -549,30 +547,22 @@ void WallSelect(HWND hWnd, int xPos, int yPos)
 
 void ChangeWestWall(HWND hWnd, int x, int y, int newFeature)
 {
-	// Prohibitions
-	if (x == 0) return;
-	if (gridmap->getCellWWall(x,y) == newFeature) return;
-	if (gridmap->getCellFloor(x,y) == FLOOR_FILL) return;
-	if (gridmap->getCellFloor(x-1,y) == FLOOR_FILL) return;
-
-	// Make the change
-	gridmap->setCellWWall(x, y, newFeature);
-	UpdateBkgdCell(hWnd, x-1, y);
-	UpdateBkgdCell(hWnd, x, y);
+	if (gridmap->canBuildWWall(x, y)
+	        && gridmap->getCellWWall(x,y) != newFeature) {
+		gridmap->setCellWWall(x, y, newFeature);
+		UpdateBkgdCell(hWnd, x-1, y);
+		UpdateBkgdCell(hWnd, x, y);
+	}
 }
 
 void ChangeNorthWall(HWND hWnd, int x, int y, int newFeature)
 {
-	// Prohibitions
-	if (y == 0) return;
-	if (gridmap->getCellNWall(x,y) == newFeature) return;
-	if (gridmap->getCellFloor(x,y) == FLOOR_FILL) return;
-	if (gridmap->getCellFloor(x,y-1) == FLOOR_FILL) return;
-
-	// Make the change
-	gridmap->setCellNWall(x, y, newFeature);
-	UpdateBkgdCell(hWnd, x, y-1);
-	UpdateBkgdCell(hWnd, x, y);
+	if (gridmap->canBuildNWall(x, y)
+	        && gridmap->getCellNWall(x,y) != newFeature) {
+		gridmap->setCellNWall(x, y, newFeature);
+		UpdateBkgdCell(hWnd, x, y-1);
+		UpdateBkgdCell(hWnd, x, y);
+	}
 }
 
 void ClearMap(HWND hWnd, bool clear)
@@ -584,8 +574,9 @@ void ClearMap(HWND hWnd, bool clear)
 }
 
 /*
-	Fill a cell's floor.
-	We need to wipe out any object, wipe any adjacent walls,
+	Perform a space-filling operation.
+	The new cell floor should be set before calling this function.
+	Now we need to wipe out any object, wipe ineligible adjacent walls,
 	and repaint all adjacent cells.
 */
 void FillCell(HWND hWnd, int x, int y)
@@ -595,12 +586,15 @@ void FillCell(HWND hWnd, int x, int y)
 	int height = gridmap->getHeightCells();
 
 	// Clear elements
-	gridmap->setCellFloor(x, y, FLOOR_FILL);
-	gridmap->setCellNWall(x, y, WALL_CLEAR);
-	gridmap->setCellWWall(x, y, WALL_CLEAR);
 	gridmap->setCellObject(x, y, OBJECT_NONE);
-	if (x+1 < width) gridmap->setCellWWall(x+1, y, WALL_CLEAR);
-	if (y+1 < width) gridmap->setCellNWall(x, y+1, WALL_CLEAR);
+	if (!gridmap->canBuildWWall(x, y))
+		gridmap->setCellWWall(x, y, WALL_CLEAR);
+	if (!gridmap->canBuildNWall(x, y))
+		gridmap->setCellNWall(x, y, WALL_CLEAR);
+	if (x+1 < width && !gridmap->canBuildWWall(x+1, y))
+		gridmap->setCellWWall(x+1, y, WALL_CLEAR);
+	if (y+1 < width && !gridmap->canBuildNWall(x, y+1))
+		gridmap->setCellNWall(x, y+1, WALL_CLEAR);
 
 	// Repaint elements
 	gridmap->paintCell(BkgdDC, x, y, true);
@@ -635,6 +629,14 @@ int GetMapFeatureFromMenu(int menuID)
 			return FLOOR_NEDOOR;
 		case IDM_FLOOR_NWDOOR:
 			return FLOOR_NWDOOR;
+		case IDM_FLOOR_NWFILL:
+			return FLOOR_NWFILL;
+		case IDM_FLOOR_NEFILL:
+			return FLOOR_NEFILL;
+		case IDM_FLOOR_SWFILL:
+			return FLOOR_SWFILL;
+		case IDM_FLOOR_SEFILL:
+			return FLOOR_SEFILL;
 
 		// Wall features
 		case IDM_WALL_CLEAR:
@@ -665,6 +667,10 @@ bool IsFloorFeature(int menuID)
 		case IDM_FLOOR_NWWALL:
 		case IDM_FLOOR_NEDOOR:
 		case IDM_FLOOR_NWDOOR:
+		case IDM_FLOOR_NWFILL:
+		case IDM_FLOOR_NEFILL:
+		case IDM_FLOOR_SWFILL:
+		case IDM_FLOOR_SEFILL:
 			return true;
 	}
 	return false;
@@ -682,6 +688,19 @@ bool IsWallFeature(int menuID)
 			return true;
 	}
 	return false;
+}
+
+// Is this cell floor feature type space-filling?
+bool IsFillFeature(int feature) {
+	switch (feature) {
+		case FLOOR_FILL:
+		case FLOOR_NEFILL:
+		case FLOOR_NWFILL:
+		case FLOOR_SEFILL:
+		case FLOOR_SWFILL:
+			return true;	
+	}
+	return false;	
 }
 
 //-----------------------------------------------------------------------------

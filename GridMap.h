@@ -27,8 +27,8 @@ struct GridCell {
 
 // Floor options
 enum {FLOOR_FILL, FLOOR_CLEAR, FLOOR_NSTAIRS, FLOOR_WSTAIRS,
-      FLOOR_NEWALL, FLOOR_NWWALL, FLOOR_NEDOOR, FLOOR_NWDOOR,
-      FLOOR_WATER
+      FLOOR_NEWALL, FLOOR_NWWALL, FLOOR_NEDOOR, FLOOR_NWDOOR, FLOOR_WATER, 
+	  FLOOR_NWFILL, FLOOR_NEFILL, FLOOR_SWFILL, FLOOR_SEFILL
      };
 
 // Wall options
@@ -73,9 +73,11 @@ class GridMap {
 		int getCellNWall(int x, int y);
 		int getCellWWall(int x, int y);
 		int getCellObject(int x, int y);
-		char *getFilename();
+		bool canBuildNWall(int x, int y);
+		bool canBuildWWall(int x, int y);
 		bool isChanged();
 		bool isFileLoadOk();
+		char* getFilename();
 
 		// Mutators
 		void setCellSizePixels(int cellSize);
