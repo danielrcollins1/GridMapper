@@ -488,33 +488,38 @@ void MyLButtonHandler(HWND hWnd, LPARAM lParam)
 	        || yPos >= gridmap->getHeightPixels())
 		return;
 
-	// Handle floor vs. wall features separately
-	if (IsFloorFeature(selectedFeature))
-		FloorSelect(hWnd, xPos, yPos);
-	else if (IsWallFeature(selectedFeature))
-		WallSelect(hWnd, xPos, yPos);
+	// Handle floor feature tool
+	FloorType floor = GetFloorTypeFromMenu(selectedFeature);
+	if (floor != FLOOR_FAIL) {
+		FloorSelect(hWnd, floor, xPos, yPos);
+		return;
+	}
+	
+	// Handle wall feature tool
+	WallType wall = GetWallTypeFromMenu(selectedFeature);
+	if (wall != WALL_FAIL) {
+		WallSelect(hWnd, wall, xPos, yPos);
+		return;
+	}
 }
 
-void FloorSelect(HWND hWnd, int xPos, int yPos)
+void FloorSelect(HWND hWnd, FloorType floor, int xPos, int yPos)
 {
 	// Figure out what cell we're in
 	int x = xPos / GetGridSize();
 	int y = yPos / GetGridSize();
 
-	// Convert menu item to feature enum
-	int newFeature = GetMapFeatureFromMenu(selectedFeature);
-
 	// If this is an actual change, do it & update window
-	if (newFeature != gridmap->getCellFloor(x, y)) {
-		gridmap->setCellFloor(x, y, newFeature);
-		if (IsFillFeature(newFeature))
+	if (floor != gridmap->getCellFloor(x, y)) {
+		gridmap->setCellFloor(x, y, floor);
+		if (IsFloorFillType(floor))
 			FillCell(hWnd, x, y);
 		else		
 			UpdateBkgdCell(hWnd, x, y);
 	}
 }
 
-void WallSelect(HWND hWnd, int xPos, int yPos)
+void WallSelect(HWND hWnd, WallType wall, int xPos, int yPos)
 {
 	// Set click sensitivity
 	int INC = GetGridSize() / 3;
@@ -535,14 +540,11 @@ void WallSelect(HWND hWnd, int xPos, int yPos)
 	if (dx >= INC*2 && dy >= INC*2) return;
 	if (dx < INC*2 && dy < INC*2) return;
 
-	// Convert menu item to feature enum
-	int newFeature = GetMapFeatureFromMenu(selectedFeature);
-
 	// Change appropriate wall
 	if (dx < dy)
-		ChangeWestWall(hWnd, x, y, newFeature);
+		ChangeWestWall(hWnd, x, y, wall);
 	else
-		ChangeNorthWall(hWnd, x, y, newFeature);
+		ChangeNorthWall(hWnd, x, y, wall);
 }
 
 void ChangeWestWall(HWND hWnd, int x, int y, int newFeature)
@@ -605,12 +607,10 @@ void FillCell(HWND hWnd, int x, int y)
 	UpdateEntireWindow(hWnd);
 }
 
-// Map a menu item to a grid map cell feature
-int GetMapFeatureFromMenu(int menuID)
+// Map a menu item to a grid map floor feature
+FloorType GetFloorTypeFromMenu(int menuID)
 {
 	switch (menuID) {
-
-		// Floor features
 		case IDM_FLOOR_FILL:
 			return FLOOR_FILL;
 		case IDM_FLOOR_CLEAR:
@@ -637,8 +637,15 @@ int GetMapFeatureFromMenu(int menuID)
 			return FLOOR_SWFILL;
 		case IDM_FLOOR_SEFILL:
 			return FLOOR_SEFILL;
+		default:
+			return FLOOR_FAIL;
+	}
+}
 
-		// Wall features
+// Map a menu item to a grid map wall feature
+WallType GetWallTypeFromMenu(int menuID)
+{
+	switch (menuID) {
 		case IDM_WALL_CLEAR:
 			return WALL_CLEAR;
 		case IDM_WALL_FILL:
@@ -650,57 +657,8 @@ int GetMapFeatureFromMenu(int menuID)
 		case IDM_WALL_SECRET_DOOR:
 			return WALL_SECRET_DOOR;
 		default:
-			return WALL_CLEAR;
+			return WALL_FAIL;
 	}
-}
-
-// Is this menu item indicating a grid map floor feature?
-bool IsFloorFeature(int menuID)
-{
-	switch (menuID) {
-		case IDM_FLOOR_FILL:
-		case IDM_FLOOR_CLEAR:
-		case IDM_FLOOR_WATER:
-		case IDM_FLOOR_NSTAIRS:
-		case IDM_FLOOR_WSTAIRS:
-		case IDM_FLOOR_NEWALL:
-		case IDM_FLOOR_NWWALL:
-		case IDM_FLOOR_NEDOOR:
-		case IDM_FLOOR_NWDOOR:
-		case IDM_FLOOR_NWFILL:
-		case IDM_FLOOR_NEFILL:
-		case IDM_FLOOR_SWFILL:
-		case IDM_FLOOR_SEFILL:
-			return true;
-	}
-	return false;
-}
-
-// Is this menu item indicating a grid map wall feature?
-bool IsWallFeature(int menuID)
-{
-	switch (menuID) {
-		case IDM_WALL_CLEAR:
-		case IDM_WALL_FILL:
-		case IDM_WALL_SINGLE_DOOR:
-		case IDM_WALL_DOUBLE_DOOR:
-		case IDM_WALL_SECRET_DOOR:
-			return true;
-	}
-	return false;
-}
-
-// Is this cell floor feature type space-filling?
-bool IsFillFeature(int feature) {
-	switch (feature) {
-		case FLOOR_FILL:
-		case FLOOR_NEFILL:
-		case FLOOR_NWFILL:
-		case FLOOR_SEFILL:
-		case FLOOR_SWFILL:
-			return true;	
-	}
-	return false;	
 }
 
 //-----------------------------------------------------------------------------

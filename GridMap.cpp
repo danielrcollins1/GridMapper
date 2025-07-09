@@ -560,3 +560,20 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 {
 	// Stub for future expansion
 }
+
+//------------------------------------------------------------------
+// Feature info function(s)
+//------------------------------------------------------------------
+
+// Is this floor type space-filling?
+bool IsFloorFillType(FloorType floor) {
+	switch (floor) {
+		case FLOOR_FILL:
+		case FLOOR_NEFILL:
+		case FLOOR_NWFILL:
+		case FLOOR_SEFILL:
+		case FLOOR_SWFILL:
+			return true;	
+	}
+	return false;		
+}

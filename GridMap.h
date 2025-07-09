@@ -21,25 +21,35 @@ struct GridCell {
 
 /*
 	Enumerations for cell contents.
-	Never reorder/renumber these, 
+	Never reorder/renumber these,
 	or you'll break the saved file format!
 */
 
-// Floor options
-enum {FLOOR_FILL, FLOOR_CLEAR, FLOOR_NSTAIRS, FLOOR_WSTAIRS,
-      FLOOR_NEWALL, FLOOR_NWWALL, FLOOR_NEDOOR, FLOOR_NWDOOR, FLOOR_WATER, 
-	  FLOOR_NWFILL, FLOOR_NEFILL, FLOOR_SWFILL, FLOOR_SEFILL
-     };
+// Floor types
+enum FloorType {
+	FLOOR_FAIL = -1,
+	FLOOR_FILL, FLOOR_CLEAR, FLOOR_NSTAIRS, FLOOR_WSTAIRS,
+	FLOOR_NEWALL, FLOOR_NWWALL, FLOOR_NEDOOR, FLOOR_NWDOOR, FLOOR_WATER,
+	FLOOR_NWFILL, FLOOR_NEFILL, FLOOR_SWFILL, FLOOR_SEFILL
+};
 
-// Wall options
-enum {WALL_CLEAR, WALL_FILL, WALL_SINGLE_DOOR, WALL_DOUBLE_DOOR,
-      WALL_SECRET_DOOR
-     };
+// Wall types
+enum WallType {
+	WALL_FAIL = -1,
+	WALL_CLEAR, WALL_FILL, WALL_SINGLE_DOOR, WALL_DOUBLE_DOOR, 
+	WALL_SECRET_DOOR
+};
 
-// Object options
-enum {OBJECT_NONE, OBJECT_STATUE, OBJECT_RUBBLE,
-      OBJECT_TRAPDOOR_FLOOR, OBJECT_TRAPDOOR_CEIL
-     };
+// Object types
+enum ObjectType {
+	OBJECT_FAIL = -1,
+	OBJECT_NONE, OBJECT_WATER, OBJECT_RUBBLE,
+	OBJECT_STALGMITE, OBJECT_SINKHOLE, OBJECT_STATUE,
+	OBJECT_TRAPDOOR_FLOOR, OBJECT_TRAPDOOR_CEIL
+};
+
+// Feature info function(s)
+bool IsFloorFillType(FloorType floor);
 
 // Filename max length
 const int GRID_FILENAME_MAX = 256;
