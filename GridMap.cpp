@@ -15,9 +15,6 @@ using std::max;
 
 // Constants
 const int DEFAULT_CELL_SIZE = 20;
-const int STAIRS_PER_SQUARE = 5;
-const int WATER_LINES_PER_EDGE = 4;
-const float LETTER_S_HEIGHT = 0.70;
 const float SQRT2_2 = 0.70710678f;
 
 //------------------------------------------------------------------
@@ -343,7 +340,7 @@ void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
 // Paint one cell's floor
 void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 {
-	// Pick color depending on filled or other
+	// Paint floor depending on filled or not
 	if (cell.floor == FLOOR_FILL) {
 		SelectObject(hDC, GetStockObject(BLACK_PEN));
 		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
@@ -357,21 +354,19 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	// Set pen for other features
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 
-	// Stairs N/S
-	if (cell.floor == FLOOR_NSTAIRS) {
-		int h = cellSize / STAIRS_PER_SQUARE;
-		for (int dy = 0; dy < cellSize; dy+=h) {
-			MoveToEx(hDC, x, y + dy, NULL);
-			LineTo(hDC, x + cellSize, y + dy);
-		}
-	}
-
-	// Stairs E/W
-	if (cell.floor == FLOOR_WSTAIRS) {
-		int h = cellSize / STAIRS_PER_SQUARE;
-		for (int dx = 0; dx < cellSize; dx+=h) {
-			MoveToEx(hDC, x + dx, y, NULL);
-			LineTo(hDC, x + dx, y + cellSize);
+	// Stairs (either direction)
+	if (cell.floor == FLOOR_NSTAIRS || cell.floor == FLOOR_WSTAIRS) {
+		const int stairsPerSquare = 5;
+		for (int s = 1; s < stairsPerSquare; s++) {
+			int d = s * cellSize / stairsPerSquare;
+			if (cell.floor == FLOOR_NSTAIRS) {
+				MoveToEx(hDC, x, y + d, NULL);
+				LineTo(hDC, x + cellSize, y + d);
+			}
+			else {
+				MoveToEx(hDC, x + d, y, NULL);
+				LineTo(hDC, x + d, y + cellSize);
+			}
 		}
 	}
 
@@ -389,7 +384,7 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 		LineTo(hDC, x, y + cellSize);
 	}
 
-	// Diagonal Door (in either direction)
+	// Diagonal Door (either direction)
 	if (cell.floor == FLOOR_NEDOOR || cell.floor == FLOOR_NWDOOR) {
 		SelectObject(hDC, GetStockObject(BLACK_PEN));
 		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
@@ -510,26 +505,18 @@ void GridMap::paintCellWWall(HDC hDC, int x, int y, GridCell cell)
 */
 void GridMap::LetterS(HDC hDC, int x, int y)
 {
-	int fontHeight = (int) (cellSize * LETTER_S_HEIGHT);
+	int fontHeight = (int)(cellSize * 0.70);
 
 	// Create a font with desired height
 	HFONT hFont =
 	    CreateFont(
-	        -fontHeight,             // Height of font
-	        0,                       // Width (0 = default)
-	        0, 0,                    // Escapement & Orientation
-	        FW_NORMAL,               // Weight
-	        FALSE, FALSE, FALSE,     // Italic, Underline, Strikeout
-	        ANSI_CHARSET,
-	        OUT_TT_PRECIS,
-	        CLIP_DEFAULT_PRECIS,
-	        DEFAULT_QUALITY,
-	        DEFAULT_PITCH | FF_DONTCARE,
-	        TEXT("Arial"));
-
+	        -fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+	        ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
+	        DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial")
+	    );
 	HFONT hOldFont = (HFONT) SelectObject(hDC, hFont);
 
-	// Measure text size
+	// Measure actual text size
 	SIZE textSize;
 	GetTextExtentPoint32(hDC, TEXT("S"), 1, &textSize);
 
@@ -538,6 +525,7 @@ void GridMap::LetterS(HDC hDC, int x, int y)
 	int textY = y - textSize.cy / 2;
 
 	// Draw the letter "S"
+	SetBkMode(hDC, OPAQUE);	
 	TextOut(hDC, textX, textY, TEXT("S"), 1);
 
 	// Clean up
@@ -552,10 +540,13 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 
 	// Water texture
 	if (cell.object == OBJECT_WATER) {
-		int h = cellSize / WATER_LINES_PER_EDGE;
+		
+		// Set line increment
+		const int linesPerEdge = 4;
+		int inc = cellSize / linesPerEdge;
 
 		// Draw lines from top-left to bottom-right
-		for (int offset = -cellSize; offset <= cellSize; offset += h) {
+		for (int offset = -cellSize; offset <= cellSize; offset += inc) {
 			int startX = x + max(0, offset);
 			int startY = y + max(0, -offset);
 			int endX = x + min(cellSize, cellSize + offset);
@@ -565,7 +556,7 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		}
 
 		// Draw lines from top-right to bottom-left
-		for (int offset = 1; offset <= 2 * cellSize; offset += h) {
+		for (int offset = 1; offset <= 2 * cellSize; offset += inc) {
 			int startX = x + min(cellSize, offset);
 			int startY = y + max(0, offset - cellSize);
 			int endX = x + max(0, offset - cellSize);
@@ -578,45 +569,34 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 	// Rubble texture
 	if (cell.object == OBJECT_RUBBLE) {
 
-		// Set size & thickness of cross arms
-		int halfSize = cellSize / 15;
-		int thickness = max(1, cellSize / 15);
+		int fontHeight = (int) (cellSize * 0.30);
 
-		// Create a geometric pen (respects thickness)
-		LOGBRUSH lb = { BS_SOLID, RGB(0, 0, 0), 0 };
-		HPEN hPen =
-		    ExtCreatePen(
-		        PS_GEOMETRIC | PS_SOLID, thickness, &lb, 0, NULL);
-		HPEN hOldPen = (HPEN)SelectObject(hDC, hPen);
-		SelectObject(hDC, GetStockObject(NULL_BRUSH));
+		// Create font with desied height
+		HFONT hFont =
+		    CreateFont(
+		        -fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+		        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+		        DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Consolas")
+		    );
+		HFONT hOldFont = (HFONT)SelectObject(hDC, hFont);
 
-		// Draw a number of random crosses
-		for (int i = 0; i < 12; ++i) {
+		// Measure actual text size
+		SIZE textSize;
+		GetTextExtentPoint32(hDC, TEXT("x"), 1, &textSize);
 
-			// Random center position
-			int cx = x + rand() % cellSize;
-			int cy = y + rand() % cellSize;
+		// Transparent background so characters don't overwrite fill
+		SetBkMode(hDC, TRANSPARENT);
 
-			// Clamp to inside, accounting for thickness
-			int minCx = x + halfSize + thickness / 2;
-			int maxCx = x + cellSize - halfSize - thickness / 2;
-			int minCy = y + halfSize + thickness / 2;
-			int maxCy = y + cellSize - halfSize - thickness / 2;
-
-			cx = max(minCx, min(cx, maxCx));
-			cy = max(minCy, min(cy, maxCy));
-
-			// First diagonal
-			MoveToEx(hDC, cx - halfSize, cy - halfSize, NULL);
-			LineTo(hDC, cx + halfSize, cy + halfSize);
-
-			// Second diagonal
-			MoveToEx(hDC, cx + halfSize, cy - halfSize, NULL);
-			LineTo(hDC, cx - halfSize, cy + halfSize);
+		// Draw a number of random "x" characters
+		for (int i = 0; i < 10; ++i) {
+			int tx = x + rand() % (cellSize - textSize.cx);
+			int ty = y + rand() % (cellSize - textSize.cy);
+			TextOut(hDC, tx, ty, TEXT("x"), 1);
 		}
 
 		// Cleanup
-		DeleteObject(hPen);
+		SelectObject(hDC, hOldFont);
+		DeleteObject(hFont);
 	}
 }
 
