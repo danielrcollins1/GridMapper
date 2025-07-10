@@ -36,8 +36,8 @@ GridMap::GridMap(int _width, int _height)
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
 			grid[x][y].floor = FLOOR_FILL;
-			grid[x][y].nwall = WALL_CLEAR;
-			grid[x][y].wwall = WALL_CLEAR;
+			grid[x][y].nwall = WALL_OPEN;
+			grid[x][y].wwall = WALL_OPEN;
 			grid[x][y].object = 0;
 		}
 	}
@@ -283,8 +283,8 @@ void GridMap::clearMap(int _floor)
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
 			grid[x][y].floor = _floor;
-			grid[x][y].wwall = WALL_CLEAR;
-			grid[x][y].nwall = WALL_CLEAR;
+			grid[x][y].wwall = WALL_OPEN;
+			grid[x][y].nwall = WALL_OPEN;
 			grid[x][y].object = OBJECT_NONE;
 		}
 	}

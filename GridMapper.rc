@@ -52,13 +52,13 @@ BEGIN
     END
     POPUP "&Tools"
     BEGIN
-        MENUITEM "&Open Space",                 IDM_FLOOR_CLEAR
+        MENUITEM "&Open Space",                 IDM_FLOOR_OPEN
         MENUITEM "&Fill Space",                 IDM_FLOOR_FILL
         MENUITEM "Stairs N/S",                  IDM_FLOOR_NSTAIRS
         MENUITEM "Stairs E/W",                  IDM_FLOOR_WSTAIRS
         MENUITEM SEPARATOR
         MENUITEM "Fill Wall",                   IDM_WALL_FILL
-        MENUITEM "Open Wall",                   IDM_WALL_CLEAR
+        MENUITEM "Open Wall",                   IDM_WALL_OPEN
         MENUITEM "Single Door",                 IDM_WALL_SINGLE_DOOR
         MENUITEM "Double Door",                 IDM_WALL_DOUBLE_DOOR
         MENUITEM "Secret Door",                 IDM_WALL_SECRET_DOOR

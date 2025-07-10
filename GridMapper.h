@@ -30,7 +30,7 @@ void ObjectSelect(HWND hWnd, ObjectType object, int xPos, int yPos);
 void WallSelect(HWND hWnd, WallType wall, int xPos, int yPos);
 void ChangeWestWall(HWND hWnd, int x, int y, int newFeature);
 void ChangeNorthWall(HWND hWnd, int x, int y, int newFeature);
-void ClearMap(HWND hWnd, bool clear);
+void ClearMap(HWND hWnd, bool open);
 void FillCell(HWND hWnd, int x, int y);
 void SetSelectedFeature(HWND hWnd, int feature);
 bool OkDiscardChanges(HWND hWnd);

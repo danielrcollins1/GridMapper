@@ -31,12 +31,12 @@
 #define IDM_COPY                        32779
 #define IDM_SET_GRID_SIZE               32780
 #define IDM_FLOOR_FILL                  32781
-#define IDM_FLOOR_CLEAR                 32782
+#define IDM_FLOOR_OPEN                  32782
 #define IDM_FLOOR_NSTAIRS               32783
 #define IDM_FLOOR_WSTAIRS               32784
 #define IDM_FLOOR_NEWALL                32785
 #define IDM_FLOOR_NWWALL                32786
-#define IDM_WALL_CLEAR                  32787
+#define IDM_WALL_OPEN                   32787
 #define IDM_WALL_FILL                   32788
 #define IDM_WALL_SINGLE_DOOR            32789
 #define IDM_WALL_DOUBLE_DOOR            32790

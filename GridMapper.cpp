@@ -131,7 +131,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 	// Application startup
 	BkgdPen = CreatePen(PS_SOLID, 1, 0x00808080);
-	SetSelectedFeature(hWnd, IDM_FLOOR_CLEAR);
+	SetSelectedFeature(hWnd, IDM_FLOOR_OPEN);
 	if (!strlen(cmdLine) || !NewMapFromFile(hWnd, cmdLine)) {
 		NewMapFromSpecs(hWnd, DefaultMapWidth, DefaultMapHeight);
 	}
@@ -616,12 +616,12 @@ void ChangeNorthWall(HWND hWnd, int x, int y, int newFeature)
 	}
 }
 
-void ClearMap(HWND hWnd, bool clear)
+void ClearMap(HWND hWnd, bool open)
 {
-	SetSelectedFeature(hWnd, clear ? IDM_FLOOR_FILL : IDM_FLOOR_CLEAR);
-	gridmap->clearMap(clear ? FLOOR_CLEAR : FLOOR_FILL);
+	gridmap->clearMap(open ? FLOOR_OPEN : FLOOR_FILL);
 	gridmap->paint(BkgdDC);
 	UpdateEntireWindow(hWnd);
+	SetSelectedFeature(hWnd, open ? IDM_FLOOR_FILL : IDM_FLOOR_OPEN);
 }
 
 /*
@@ -640,13 +640,13 @@ void FillCell(HWND hWnd, int x, int y)
 	if (gridmap->getCellFloor(x, y) == FLOOR_FILL)
 		gridmap->setCellObject(x, y, OBJECT_NONE);
 	if (!gridmap->canBuildWWall(x, y))
-		gridmap->setCellWWall(x, y, WALL_CLEAR);
+		gridmap->setCellWWall(x, y, WALL_OPEN);
 	if (!gridmap->canBuildNWall(x, y))
-		gridmap->setCellNWall(x, y, WALL_CLEAR);
+		gridmap->setCellNWall(x, y, WALL_OPEN);
 	if (x+1 < width && !gridmap->canBuildWWall(x+1, y))
-		gridmap->setCellWWall(x+1, y, WALL_CLEAR);
+		gridmap->setCellWWall(x+1, y, WALL_OPEN);
 	if (y+1 < width && !gridmap->canBuildNWall(x, y+1))
-		gridmap->setCellNWall(x, y+1, WALL_CLEAR);
+		gridmap->setCellNWall(x, y+1, WALL_OPEN);
 
 	// Repaint elements
 	gridmap->paintCell(BkgdDC, x, y, true);
@@ -667,8 +667,8 @@ FloorType GetFloorTypeFromMenu(int menuID)
 	switch (menuID) {
 		case IDM_FLOOR_FILL:
 			return FLOOR_FILL;
-		case IDM_FLOOR_CLEAR:
-			return FLOOR_CLEAR;
+		case IDM_FLOOR_OPEN:
+			return FLOOR_OPEN;
 		case IDM_FLOOR_NSTAIRS:
 			return FLOOR_NSTAIRS;
 		case IDM_FLOOR_WSTAIRS:
@@ -698,8 +698,8 @@ FloorType GetFloorTypeFromMenu(int menuID)
 WallType GetWallTypeFromMenu(int menuID)
 {
 	switch (menuID) {
-		case IDM_WALL_CLEAR:
-			return WALL_CLEAR;
+		case IDM_WALL_OPEN:
+			return WALL_OPEN;
 		case IDM_WALL_FILL:
 			return WALL_FILL;
 		case IDM_WALL_SINGLE_DOOR:
@@ -787,7 +787,7 @@ void SetNewMap(HWND hWnd, GridMap *newmap)
 	gridmap = newmap;
 	SetBkgdDC(hWnd);
 	SetScrollRange(hWnd, true);
-	SetSelectedFeature(hWnd, IDM_FLOOR_CLEAR);
+	SetSelectedFeature(hWnd, IDM_FLOOR_OPEN);
 	UpdateEntireWindow(hWnd);
 }
 
