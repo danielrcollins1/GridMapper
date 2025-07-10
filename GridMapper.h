@@ -26,6 +26,7 @@ void MyKeyHandler(HWND hWnd, WPARAM wParam);
 void MyPaintWindow(HWND hWnd);
 void MyLButtonHandler(HWND hWnd, LPARAM lParam);
 void FloorSelect(HWND hWnd, FloorType floor, int xPos, int yPos);
+void ObjectSelect(HWND hWnd, ObjectType object, int xPos, int yPos);
 void WallSelect(HWND hWnd, WallType wall, int xPos, int yPos);
 void ChangeWestWall(HWND hWnd, int x, int y, int newFeature);
 void ChangeNorthWall(HWND hWnd, int x, int y, int newFeature);
@@ -43,8 +44,10 @@ void SaveMapAs(HWND hWnd);
 void SaveMap(HWND hWnd);
 void CopyMap(HWND hWnd);
 void PrintMap(HWND hWnd);
+void GetMapCoordsFromWindow(int xWin, int yWin, int& xMap, int& yMap);
 LRESULT CALLBACK NewDialog(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK GridSizeDialog(HWND, UINT, WPARAM, LPARAM);
 FloorType GetFloorTypeFromMenu(int menuID);
 WallType GetWallTypeFromMenu(int menuID);
+ObjectType GetObjectTypeFromMenu(int menuID);
 #endif

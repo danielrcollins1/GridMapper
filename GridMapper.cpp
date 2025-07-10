@@ -506,14 +506,21 @@ void MyLButtonHandler(HWND hWnd, LPARAM lParam)
 		return;
 	}
 
-	// Handle floor feature tool
+	// Place floors
 	FloorType floor = GetFloorTypeFromMenu(selectedFeature);
 	if (floor != FLOOR_FAIL) {
 		FloorSelect(hWnd, floor, xPos, yPos);
 		return;
 	}
 
-	// Handle wall feature tool
+	// Place objects
+	ObjectType object = GetObjectTypeFromMenu(selectedFeature);
+	if (object != OBJECT_FAIL) {
+		ObjectSelect(hWnd, object, xPos, yPos);
+		return;
+	}
+
+	// Place walls
 	WallType wall = GetWallTypeFromMenu(selectedFeature);
 	if (wall != WALL_FAIL) {
 		WallSelect(hWnd, wall, xPos, yPos);
@@ -521,14 +528,20 @@ void MyLButtonHandler(HWND hWnd, LPARAM lParam)
 	}
 }
 
+void GetMapCoordsFromWindow(int xWin, int yWin, int& xMap, int& yMap)
+{
+	xMap = xWin / GetGridSize();
+	yMap = yWin / GetGridSize();
+}
+
 void FloorSelect(HWND hWnd, FloorType floor, int xPos, int yPos)
 {
-	// Figure out what cell we're in
-	int x = xPos / GetGridSize();
-	int y = yPos / GetGridSize();
+	// Find what cell we're in
+	int x, y;
+	GetMapCoordsFromWindow(xPos, yPos, x, y);
 
 	// If this is an actual change, do it & update window
-	if (floor != gridmap->getCellFloor(x, y)) {
+	if (gridmap->getCellFloor(x, y) != floor) {
 		gridmap->setCellFloor(x, y, floor);
 		if (IsFloorFillType(floor)) {
 			FillCell(hWnd, x, y);
@@ -536,6 +549,20 @@ void FloorSelect(HWND hWnd, FloorType floor, int xPos, int yPos)
 		else {
 			UpdateBkgdCell(hWnd, x, y);
 		}
+	}
+}
+
+void ObjectSelect(HWND hWnd, ObjectType object, int xPos, int yPos)
+{
+	// Find what cell we're in
+	int x, y;
+	GetMapCoordsFromWindow(xPos, yPos, x, y);
+
+	// If this is an actual change, do it & update window
+	if (gridmap->getCellFloor(x, y) != FLOOR_FILL
+	        && gridmap->getCellObject(x, y) != object) {
+		gridmap->setCellObject(x, y, object);
+		UpdateBkgdCell(hWnd, x, y);
 	}
 }
 
@@ -610,7 +637,8 @@ void FillCell(HWND hWnd, int x, int y)
 	int height = gridmap->getHeightCells();
 
 	// Clear elements
-	gridmap->setCellObject(x, y, OBJECT_NONE);
+	if (gridmap->getCellFloor(x, y) == FLOOR_FILL)
+		gridmap->setCellObject(x, y, OBJECT_NONE);
 	if (!gridmap->canBuildWWall(x, y))
 		gridmap->setCellWWall(x, y, WALL_CLEAR);
 	if (!gridmap->canBuildNWall(x, y))
@@ -641,8 +669,6 @@ FloorType GetFloorTypeFromMenu(int menuID)
 			return FLOOR_FILL;
 		case IDM_FLOOR_CLEAR:
 			return FLOOR_CLEAR;
-		case IDM_FLOOR_WATER:
-			return FLOOR_WATER;
 		case IDM_FLOOR_NSTAIRS:
 			return FLOOR_NSTAIRS;
 		case IDM_FLOOR_WSTAIRS:
@@ -684,6 +710,21 @@ WallType GetWallTypeFromMenu(int menuID)
 			return WALL_SECRET_DOOR;
 		default:
 			return WALL_FAIL;
+	}
+}
+
+// Map a menu item to a grid map object feature
+ObjectType GetObjectTypeFromMenu(int menuID)
+{
+	switch (menuID) {
+		case IDM_OBJECT_CLEAR:
+			return OBJECT_NONE;
+		case IDM_OBJECT_WATER:
+			return OBJECT_WATER;
+		case IDM_OBJECT_RUBBLE:
+			return OBJECT_RUBBLE;
+		default:
+			return OBJECT_FAIL;
 	}
 }
 

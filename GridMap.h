@@ -29,7 +29,7 @@ struct GridCell {
 enum FloorType {
 	FLOOR_FAIL = -1,
 	FLOOR_FILL, FLOOR_CLEAR, FLOOR_NSTAIRS, FLOOR_WSTAIRS,
-	FLOOR_NEWALL, FLOOR_NWWALL, FLOOR_NEDOOR, FLOOR_NWDOOR, FLOOR_WATER,
+	FLOOR_NEWALL, FLOOR_NWWALL, FLOOR_NEDOOR, FLOOR_NWDOOR,
 	FLOOR_NWFILL, FLOOR_NEFILL, FLOOR_SWFILL, FLOOR_SEFILL
 };
 
@@ -65,13 +65,6 @@ class GridMap {
 		GridMap(char *filename);
 		~GridMap();
 
-		// Save to file
-		int save();
-
-		// Paint on a display context
-		void paint(HDC hDC);
-		void paintCell(HDC hDC, int x, int y, bool allWalls);
-
 		// Accessors
 		int getWidthCells();
 		int getHeightCells();
@@ -97,6 +90,13 @@ class GridMap {
 		void setCellObject(int x, int y, int object);
 		void clearMap(int floor);
 		void setFilename(char *name);
+
+		// Paint on a display context
+		void paint(HDC hDC);
+		void paintCell(HDC hDC, int x, int y, bool allWalls);
+
+		// Save to file
+		int save();
 
 	protected:
 

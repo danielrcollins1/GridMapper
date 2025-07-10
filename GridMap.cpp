@@ -325,9 +325,9 @@ void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
 	int xPos = x * cellSize;
 	int yPos = y * cellSize;
 	paintCellFloor(hDC, xPos, yPos, grid[x][y]);
+	paintCellObject(hDC, xPos, yPos, grid[x][y]);
 	paintCellNWall(hDC, xPos, yPos, grid[x][y]);
 	paintCellWWall(hDC, xPos, yPos, grid[x][y]);
-	paintCellObject(hDC, xPos, yPos, grid[x][y]);
 
 	// Paint other adjacent walls if requested (partial repaint)
 	if (allWalls) {
@@ -372,31 +372,6 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 		for (int dx = 0; dx < cellSize; dx+=h) {
 			MoveToEx(hDC, x + dx, y, NULL);
 			LineTo(hDC, x + dx, y + cellSize);
-		}
-	}
-
-	// Water texture
-	if (cell.floor == FLOOR_WATER) {
-		int h = cellSize / WATER_LINES_PER_EDGE;
-
-		// Draw lines from top-left to bottom-right
-		for (int offset = -cellSize; offset <= cellSize; offset += h) {
-			int startX = x + max(0, offset);
-			int startY = y + max(0, -offset);
-			int endX = x + min(cellSize, cellSize + offset);
-			int endY = y + min(cellSize, cellSize - offset);
-			MoveToEx(hDC, startX, startY, NULL);
-			LineTo(hDC, endX, endY);
-		}
-
-		// Draw lines from top-right to bottom-left
-		for (int offset = 1; offset <= 2 * cellSize; offset += h) {
-			int startX = x + min(cellSize, offset);
-			int startY = y + max(0, offset - cellSize);
-			int endX = x + max(0, offset - cellSize);
-			int endY = y + min(cellSize, offset);
-			MoveToEx(hDC, startX, startY, NULL);
-			LineTo(hDC, endX, endY);
 		}
 	}
 
@@ -573,7 +548,32 @@ void GridMap::LetterS(HDC hDC, int x, int y)
 // Paint one cell's object
 void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 {
-	// Stub for future expansion
+	SelectObject(hDC, GetStockObject(BLACK_PEN));
+	
+	// Water texture
+	if (cell.object == OBJECT_WATER) {
+		int h = cellSize / WATER_LINES_PER_EDGE;
+
+		// Draw lines from top-left to bottom-right
+		for (int offset = -cellSize; offset <= cellSize; offset += h) {
+			int startX = x + max(0, offset);
+			int startY = y + max(0, -offset);
+			int endX = x + min(cellSize, cellSize + offset);
+			int endY = y + min(cellSize, cellSize - offset);
+			MoveToEx(hDC, startX, startY, NULL);
+			LineTo(hDC, endX, endY);
+		}
+
+		// Draw lines from top-right to bottom-left
+		for (int offset = 1; offset <= 2 * cellSize; offset += h) {
+			int startX = x + min(cellSize, offset);
+			int startY = y + max(0, offset - cellSize);
+			int endX = x + max(0, offset - cellSize);
+			int endY = y + min(cellSize, offset);
+			MoveToEx(hDC, startX, startY, NULL);
+			LineTo(hDC, endX, endY);
+		}
+	}
 }
 
 //------------------------------------------------------------------
