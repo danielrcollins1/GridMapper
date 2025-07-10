@@ -67,17 +67,21 @@ GridMap::GridMap(char *_filename)
 
 	// Check header
 	fread(header, sizeof(char), 4, f);
-	if (strncmp(header, "GM", 2)) goto fail;
+	if (strncmp(header, "GM", 2)) {
+		goto fail;
+	}
 
 	// Read & create other stuff
 	fread(&cellSize, sizeof(int), 1, f);
 	fread(&width, sizeof(int), 1, f);
 	fread(&height, sizeof(int), 1, f);
 	grid = new GridCell*[width];
-	for (x = 0; x < width; x++)
+	for (x = 0; x < width; x++) {
 		grid[x] = new GridCell[height];
-	for (x = 0; x < width; x++)
+	}
+	for (x = 0; x < width; x++) {
 		fread(grid[x], sizeof(GridCell), height, f);
+	}
 
 	// Clean up
 	fclose(f);
@@ -98,7 +102,9 @@ int GridMap::save()
 {
 	// Open file
 	FILE *f = fopen(filename, "wb");
-	if (!f) return 0;
+	if (!f) {
+		return 0;
+	}
 
 	// Save stuff
 	char header[] = "GM\1\0";
@@ -106,8 +112,9 @@ int GridMap::save()
 	fwrite(&cellSize, sizeof(int), 1, f);
 	fwrite(&width, sizeof(int), 1, f);
 	fwrite(&height, sizeof(int), 1, f);
-	for (int x = 0; x < width; x++)
+	for (int x = 0; x < width; x++) {
 		fwrite(grid[x], sizeof(GridCell), height, f);
+	}
 
 	// Clean up
 	fclose(f);
@@ -190,21 +197,22 @@ char* GridMap::getFilename()
 */
 bool GridMap::canBuildNWall(int x, int y)
 {
-	if (y == 0)            // on top border
+	if (y == 0) {            // on top border
 		return false;
+	}
 	switch (getCellFloor(x, y-1)) {
 		case FLOOR_FILL:
 		case FLOOR_SWFILL:
 		case FLOOR_SEFILL:
-			return false;		
+			return false;
 	}
 	switch (getCellFloor(x, y)) {
 		case FLOOR_FILL:
 		case FLOOR_NWFILL:
 		case FLOOR_NEFILL:
-			return false;		
+			return false;
 	}
-	return true;		
+	return true;
 }
 
 /*
@@ -213,21 +221,22 @@ bool GridMap::canBuildNWall(int x, int y)
 */
 bool GridMap::canBuildWWall(int x, int y)
 {
-	if (x == 0)            // on left border
-		return false;	
+	if (x == 0) {            // on left border
+		return false;
+	}
 	switch (getCellFloor(x-1, y)) {
 		case FLOOR_FILL:
 		case FLOOR_NEFILL:
 		case FLOOR_SEFILL:
-			return false;		
+			return false;
 	}
 	switch (getCellFloor(x, y)) {
 		case FLOOR_FILL:
 		case FLOOR_NWFILL:
 		case FLOOR_SWFILL:
-			return false;		
+			return false;
 	}
-	return true;		
+	return true;
 }
 
 //------------------------------------------------------------------
@@ -294,10 +303,12 @@ HPEN ThickBlackPen = NULL;
 void GridMap::paint(HDC hDC)
 {
 	// Create pens if needed
-	if (!ThickBlackPen)
+	if (!ThickBlackPen) {
 		ThickBlackPen = CreatePen(PS_SOLID, 3, 0x00000000);
-	if (!ThinGrayPen)
+	}
+	if (!ThinGrayPen) {
 		ThinGrayPen = CreatePen(PS_SOLID, 1, 0x00808080);
+	}
 
 	// Draw each grid cell
 	for (int x = 0; x < width; x++) {
@@ -320,19 +331,27 @@ void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
 
 	// Paint other adjacent walls if requested (partial repaint)
 	if (allWalls) {
-		if (x+1 < width)
+		if (x+1 < width) {
 			paintCellWWall(hDC, xPos + cellSize, yPos, grid[x+1][y]);
-		if (y+1 < height)
+		}
+		if (y+1 < height) {
 			paintCellNWall(hDC, xPos, yPos + cellSize, grid[x][y+1]);
+		}
 	}
 }
 
 // Paint one cell's floor
 void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 {
-	// Paint base clear or filled
-	SelectObject(hDC, GetStockObject(cell.floor ? WHITE_PEN : BLACK_PEN));
-	SelectObject(hDC, GetStockObject(cell.floor ? WHITE_BRUSH : BLACK_BRUSH));
+	// Pick color depending on filled or other
+	if (cell.floor == FLOOR_FILL) {
+		SelectObject(hDC, GetStockObject(BLACK_PEN));
+		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+	}
+	else {
+		SelectObject(hDC, GetStockObject(WHITE_PEN));
+		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
+	}
 	Rectangle(hDC, x, y, x + cellSize, y + cellSize);
 
 	// Set pen for other features
@@ -382,24 +401,21 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	}
 
 	// Diagonal Wall NW/SE
-	if (cell.floor == FLOOR_NWWALL
-	        || cell.floor == FLOOR_NWDOOR) {
+	if (cell.floor == FLOOR_NWWALL || cell.floor == FLOOR_NWDOOR) {
 		SelectObject(hDC, ThickBlackPen);
 		MoveToEx(hDC, x, y, NULL);
 		LineTo(hDC, x + cellSize, y + cellSize);
 	}
 
 	// Diagonal Wall NE/SW
-	if (cell.floor == FLOOR_NEWALL
-	        || cell.floor == FLOOR_NEDOOR) {
+	if (cell.floor == FLOOR_NEWALL || cell.floor == FLOOR_NEDOOR) {
 		SelectObject(hDC, ThickBlackPen);
 		MoveToEx(hDC, x + cellSize, y, NULL);
 		LineTo(hDC, x, y + cellSize);
 	}
 
 	// Diagonal Door (in either direction)
-	if (cell.floor == FLOOR_NEDOOR
-	        || cell.floor == FLOOR_NWDOOR) {
+	if (cell.floor == FLOOR_NEDOOR || cell.floor == FLOOR_NWDOOR) {
 		SelectObject(hDC, GetStockObject(BLACK_PEN));
 		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
 
@@ -420,31 +436,30 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	}
 
 	// Diagonal half-fill
-	if (cell.floor == FLOOR_NEFILL || cell.floor == FLOOR_NWFILL
-	        || cell.floor == FLOOR_SEFILL || cell.floor == FLOOR_SWFILL) {
+	if (FLOOR_NWFILL <= cell.floor && cell.floor <= FLOOR_SEFILL) {
 
 		POINT triangle[3];
 
 		switch (cell.floor) {
 			case FLOOR_NWFILL:
-				triangle[0] = { x, y };                        // Top-left
-				triangle[1] = { x + cellSize, y };            // Top-right
-				triangle[2] = { x, y + cellSize };            // Bottom-left
+				triangle[0] = { x, y };
+				triangle[1] = { x + cellSize, y };
+				triangle[2] = { x, y + cellSize };
 				break;
 			case FLOOR_NEFILL:
-				triangle[0] = { x + cellSize, y };            // Top-right
-				triangle[1] = { x + cellSize, y + cellSize }; // Bottom-right
-				triangle[2] = { x, y };                       // Top-left
+				triangle[0] = { x + cellSize, y };
+				triangle[1] = { x + cellSize, y + cellSize };
+				triangle[2] = { x, y };
 				break;
 			case FLOOR_SWFILL:
-				triangle[0] = { x, y + cellSize };            // Bottom-left
-				triangle[1] = { x, y };                       // Top-left
-				triangle[2] = { x + cellSize, y + cellSize }; // Bottom-right
+				triangle[0] = { x, y + cellSize };
+				triangle[1] = { x, y };
+				triangle[2] = { x + cellSize, y + cellSize };
 				break;
 			case FLOOR_SEFILL:
-				triangle[0] = { x + cellSize, y + cellSize }; // Bottom-right
-				triangle[1] = { x, y + cellSize };            // Bottom-left
-				triangle[2] = { x + cellSize, y };            // Top-right
+				triangle[0] = { x + cellSize, y + cellSize };
+				triangle[1] = { x, y + cellSize };
+				triangle[2] = { x + cellSize, y };
 				break;
 		}
 
@@ -566,14 +581,15 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 //------------------------------------------------------------------
 
 // Is this floor type space-filling?
-bool IsFloorFillType(FloorType floor) {
+bool IsFloorFillType(FloorType floor)
+{
 	switch (floor) {
 		case FLOOR_FILL:
 		case FLOOR_NEFILL:
 		case FLOOR_NWFILL:
 		case FLOOR_SEFILL:
 		case FLOOR_SWFILL:
-			return true;	
+			return true;
 	}
-	return false;		
+	return false;
 }
