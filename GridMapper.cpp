@@ -10,6 +10,7 @@
 #include "GridMapper.h"
 #include "Resource.h"
 #include <sstream>
+#include <ctime>
 
 // Constants
 const int MAX_LOADSTRING = 100;
@@ -130,6 +131,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	UpdateWindow(hWnd);
 
 	// Application startup
+	srand((unsigned int) time(NULL));
 	BkgdPen = CreatePen(PS_SOLID, 1, 0x00808080);
 	SetSelectedFeature(hWnd, IDM_FLOOR_OPEN);
 	if (!strlen(cmdLine) || !NewMapFromFile(hWnd, cmdLine)) {

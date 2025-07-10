@@ -549,7 +549,7 @@ void GridMap::LetterS(HDC hDC, int x, int y)
 void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 {
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
-	
+
 	// Water texture
 	if (cell.object == OBJECT_WATER) {
 		int h = cellSize / WATER_LINES_PER_EDGE;
@@ -573,6 +573,50 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 			MoveToEx(hDC, startX, startY, NULL);
 			LineTo(hDC, endX, endY);
 		}
+	}
+
+	// Rubble texture
+	if (cell.object == OBJECT_RUBBLE) {
+
+		// Set size & thickness of cross arms
+		int halfSize = cellSize / 15;
+		int thickness = max(1, cellSize / 15);
+
+		// Create a geometric pen (respects thickness)
+		LOGBRUSH lb = { BS_SOLID, RGB(0, 0, 0), 0 };
+		HPEN hPen =
+		    ExtCreatePen(
+		        PS_GEOMETRIC | PS_SOLID, thickness, &lb, 0, NULL);
+		HPEN hOldPen = (HPEN)SelectObject(hDC, hPen);
+		SelectObject(hDC, GetStockObject(NULL_BRUSH));
+
+		// Draw a number of random crosses
+		for (int i = 0; i < 12; ++i) {
+
+			// Random center position
+			int cx = x + rand() % cellSize;
+			int cy = y + rand() % cellSize;
+
+			// Clamp to inside, accounting for thickness
+			int minCx = x + halfSize + thickness / 2;
+			int maxCx = x + cellSize - halfSize - thickness / 2;
+			int minCy = y + halfSize + thickness / 2;
+			int maxCy = y + cellSize - halfSize - thickness / 2;
+
+			cx = max(minCx, min(cx, maxCx));
+			cy = max(minCy, min(cy, maxCy));
+
+			// First diagonal
+			MoveToEx(hDC, cx - halfSize, cy - halfSize, NULL);
+			LineTo(hDC, cx + halfSize, cy + halfSize);
+
+			// Second diagonal
+			MoveToEx(hDC, cx + halfSize, cy - halfSize, NULL);
+			LineTo(hDC, cx - halfSize, cy + halfSize);
+		}
+
+		// Cleanup
+		DeleteObject(hPen);
 	}
 }
 

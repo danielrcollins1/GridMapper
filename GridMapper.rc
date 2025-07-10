@@ -74,6 +74,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Clear Object",                IDM_OBJECT_CLEAR
         MENUITEM "Water Object",                IDM_OBJECT_WATER
+        MENUITEM "Rubble Object",               IDM_OBJECT_RUBBLE
         MENUITEM SEPARATOR
         MENUITEM "Fill Entire Map",             IDM_FILL_MAP
         MENUITEM "Clear Entire Map",            IDM_CLEAR_MAP
