@@ -617,6 +617,7 @@ void GridMap::LetterS(HDC hDC, int x, int y)
 
 	// Draw the letter "S"
 	SetBkMode(hDC, OPAQUE);
+	SetTextAlign(hDC, TA_LEFT | TA_TOP);	
 	TextOut(hDC, textX, textY, TEXT("S"), 1);
 
 	// Clean up
@@ -673,6 +674,44 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		Polygon(hDC, starPts, 10);
 	}
 
+	// Trapdoor object (square with "T" inside)
+	if (cell.object == OBJECT_TRAPDOOR) {
+		const float ratio = 0.80f;
+		int innerSize = (int)(cellSize * ratio);
+		int innerX = x + (cellSize - innerSize) / 2;
+		int innerY = y + (cellSize - innerSize) / 2;
+
+		// Draw the inner square
+		Rectangle(hDC, innerX, innerY,
+		          innerX + innerSize, innerY + innerSize);
+
+		// Set text alignment and background mode
+		SetBkMode(hDC, TRANSPARENT);
+		SetTextAlign(hDC, TA_CENTER | TA_BASELINE);
+
+		// Create font scaled to 80% of inner square
+		int fontHeight = (int)(innerSize * ratio);
+		HFONT hFont =
+		    CreateFont(
+		        -fontHeight, 0, 0, 0, FW_BOLD,
+		        FALSE, FALSE, FALSE,
+		        ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+		        CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+		        DEFAULT_PITCH | FF_SWISS,
+		        TEXT("Arial")
+		    );
+		HFONT hOldFont = (HFONT)SelectObject(hDC, hFont);
+
+		// Draw the "T" centered in the inner square
+		int textX = innerX + innerSize / 2;
+		int textY = innerY + innerSize / 2 + (int)(fontHeight * 0.43);
+		TextOut(hDC, textX, textY, TEXT("T"), 1);
+
+		// Cleanup
+		SelectObject(hDC, hOldFont);
+		DeleteObject(hFont);
+	}
+
 	// Rubble texture (many random "x" characters)
 	if (cell.object == OBJECT_RUBBLE) {
 
@@ -693,6 +732,7 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 
 		// Transparent background so characters don't overwrite fill
 		SetBkMode(hDC, TRANSPARENT);
+		SetTextAlign(hDC, TA_LEFT | TA_TOP);	
 
 		// Draw a number of random "x" characters
 		for (int i = 0; i < 10; ++i) {

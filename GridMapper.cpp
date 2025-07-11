@@ -731,6 +731,10 @@ ObjectType GetObjectTypeFromMenu(int menuID)
 			return OBJECT_STATUE;
 		case IDM_OBJECT_RUBBLE:
 			return OBJECT_RUBBLE;
+		case IDM_OBJECT_TRAPDOOR:
+			return OBJECT_TRAPDOOR;
+		case IDM_OBJECT_PIT:
+			return OBJECT_PIT;			
 		default:
 			return OBJECT_FAIL;
 	}
