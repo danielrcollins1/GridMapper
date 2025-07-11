@@ -727,6 +727,8 @@ ObjectType GetObjectTypeFromMenu(int menuID)
 			return OBJECT_WATER;
 		case IDM_OBJECT_RUBBLE:
 			return OBJECT_RUBBLE;
+		case IDM_OBJECT_PILLAR:
+			return OBJECT_PILLAR;
 		default:
 			return OBJECT_FAIL;
 	}

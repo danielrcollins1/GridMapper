@@ -20,6 +20,17 @@ const float TAU = 6.283185307f;
 const float SQRT2_2 = 0.70710678f;
 
 //------------------------------------------------------------------
+// Feature info function(s)
+//------------------------------------------------------------------
+
+// Is this floor type space-filling?
+bool IsFloorFillType(FloorType floor)
+{
+	return (floor == FLOOR_FILL
+	        || (FLOOR_NWFILL <= floor && floor <= FLOOR_SEFILL));
+}
+
+//------------------------------------------------------------------
 // Constructor/ Destructors
 //------------------------------------------------------------------
 
@@ -469,7 +480,7 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 
 		// Draw center circle (percent of outer radius)
 		int innerRadius = (int)(radius * 0.20);
-		SelectObject(hDC, GetStockObject(BLACK_BRUSH));		
+		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
 		Ellipse(hDC,
 		        cx - innerRadius, cy - innerRadius,
 		        cx + innerRadius, cy + innerRadius);
@@ -590,7 +601,7 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 {
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 
-	// Water texture
+	// Water texture (diagonal hatched lines)
 	if (cell.object == OBJECT_WATER) {
 
 		// Set line increment
@@ -618,7 +629,7 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		}
 	}
 
-	// Rubble texture
+	// Rubble texture (several random "x" characters)
 	if (cell.object == OBJECT_RUBBLE) {
 
 		int fontHeight = (int) (cellSize * 0.30);
@@ -650,15 +661,13 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		SelectObject(hDC, hOldFont);
 		DeleteObject(hFont);
 	}
-}
 
-//------------------------------------------------------------------
-// Feature info function(s)
-//------------------------------------------------------------------
-
-// Is this floor type space-filling?
-bool IsFloorFillType(FloorType floor)
-{
-	return (floor == FLOOR_FILL
-	        || (FLOOR_NWFILL <= floor && floor <= FLOOR_SEFILL));
+	// Pillar object (black circle)
+	if (cell.object == OBJECT_PILLAR) {
+		int cx = x + cellSize / 2;
+		int cy = y + cellSize / 2;
+		int radius = (int)(cellSize/2 * 0.50);
+		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+		Ellipse(hDC, cx - radius, cy - radius, cx + radius, cy + radius);
+	}
 }
