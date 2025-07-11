@@ -725,10 +725,12 @@ ObjectType GetObjectTypeFromMenu(int menuID)
 	switch (menuID) {
 		case IDM_OBJECT_CLEAR:
 			return OBJECT_NONE;
-		case IDM_OBJECT_RUBBLE:
-			return OBJECT_RUBBLE;
 		case IDM_OBJECT_PILLAR:
 			return OBJECT_PILLAR;
+		case IDM_OBJECT_STATUE:
+			return OBJECT_STATUE;
+		case IDM_OBJECT_RUBBLE:
+			return OBJECT_RUBBLE;
 		default:
 			return OBJECT_FAIL;
 	}

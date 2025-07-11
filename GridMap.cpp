@@ -499,7 +499,7 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 			LineTo(hDC, xOuter, yOuter);
 		}
 	}
-	
+
 	// Water texture (diagonal hatched lines)
 	if (cell.floor == FLOOR_WATER) {
 
@@ -631,11 +631,46 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 
 	// Pillar object (black circle)
 	if (cell.object == OBJECT_PILLAR) {
-		int cx = x + cellSize / 2;
-		int cy = y + cellSize / 2;
-		int radius = (int)(cellSize/2 * 0.50);
+		int halfCell = cellSize / 2;
+		int cx = x + halfCell;
+		int cy = y + halfCell;
+		int radius = (int)(halfCell * 0.50);
 		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
 		Ellipse(hDC, cx - radius, cy - radius, cx + radius, cy + radius);
+	}
+
+	// Statue object (circle with 5-pointed star inside)
+	if (cell.object == OBJECT_STATUE) {
+		const int NUM_POINTS = 5;
+
+		// Compute center of square and radius of circle
+		int halfCell = cellSize / 2;
+		int cx = x + halfCell;
+		int cy = y + halfCell;
+		int radius = (int)(halfCell * 0.60);
+
+		// Draw the circle
+		SelectObject(hDC, GetStockObject(NULL_BRUSH));
+		Ellipse(hDC, cx - radius, cy - radius, cx + radius, cy + radius);
+
+		// Get parameters for 10 points (outer and inner vertices)
+		int outerR = radius;
+		int innerR = (int)(radius * 0.382);  // Golden ratio
+		double startAngle = -TAU / 4;
+		double angleStep = TAU / (NUM_POINTS * 2);
+
+		// Compute the points
+		POINT starPts[10];
+		for (int i = 0; i < 10; ++i) {
+			double angle = startAngle + i * angleStep;
+			int r = (i % 2 == 0) ? outerR : innerR;
+			starPts[i].x = cx + (int)(r * cos(angle));
+			starPts[i].y = cy + (int)(r * sin(angle));
+		}
+
+		// Fill the star
+		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+		Polygon(hDC, starPts, 10);
 	}
 
 	// Rubble texture (many random "x" characters)

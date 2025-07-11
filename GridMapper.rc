@@ -76,6 +76,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Clear Object",                IDM_OBJECT_CLEAR
         MENUITEM "Pillar Object",               IDM_OBJECT_PILLAR
+        MENUITEM "Statue Object",               IDM_OBJECT_STATUE
         MENUITEM "Rubble Object",               IDM_OBJECT_RUBBLE
         MENUITEM SEPARATOR
         MENUITEM "Fill Entire Map",             IDM_FILL_MAP

@@ -52,6 +52,7 @@
 #define IDM_OBJECT_RUBBLE               32800
 #define IDM_FLOOR_SPIRALSTAIRS          32801
 #define IDM_OBJECT_PILLAR               32802
+#define IDM_OBJECT_STATUE               32803
 #define IDM_END_TOOLS_LIST              33000
 #define IDC_STATIC                      -1
 
