@@ -617,7 +617,7 @@ void GridMap::LetterS(HDC hDC, int x, int y)
 
 	// Draw the letter "S"
 	SetBkMode(hDC, OPAQUE);
-	SetTextAlign(hDC, TA_LEFT | TA_TOP);	
+	SetTextAlign(hDC, TA_LEFT | TA_TOP);
 	TextOut(hDC, textX, textY, TEXT("S"), 1);
 
 	// Clean up
@@ -648,7 +648,7 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		int halfCell = cellSize / 2;
 		int cx = x + halfCell;
 		int cy = y + halfCell;
-		int radius = (int)(halfCell * 0.60);
+		int radius = (int)(halfCell * 0.70);
 
 		// Draw the circle
 		SelectObject(hDC, GetStockObject(NULL_BRUSH));
@@ -712,6 +712,26 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		DeleteObject(hFont);
 	}
 
+	// Pit object (square with "X" inside)
+	if (cell.object == OBJECT_PIT) {
+
+		// Size and position of square
+		int innerSize = (int)(cellSize * 0.70);
+		int innerX = x + (cellSize - innerSize) / 2;
+		int innerY = y + (cellSize - innerSize) / 2;
+
+		// Draw the square outline
+		Rectangle(hDC, innerX, innerY, innerX + innerSize, innerY + innerSize);
+
+		// Top-left to bottom-right diagonal
+		MoveToEx(hDC, innerX, innerY, nullptr);
+		LineTo(hDC, innerX + innerSize, innerY + innerSize);
+
+		// Top-right to bottom-left diagonal
+		MoveToEx(hDC, innerX + innerSize, innerY, nullptr);
+		LineTo(hDC, innerX, innerY + innerSize);
+	}
+
 	// Rubble texture (many random "x" characters)
 	if (cell.object == OBJECT_RUBBLE) {
 
@@ -732,7 +752,7 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 
 		// Transparent background so characters don't overwrite fill
 		SetBkMode(hDC, TRANSPARENT);
-		SetTextAlign(hDC, TA_LEFT | TA_TOP);	
+		SetTextAlign(hDC, TA_LEFT | TA_TOP);
 
 		// Draw a number of random "x" characters
 		for (int i = 0; i < 10; ++i) {
