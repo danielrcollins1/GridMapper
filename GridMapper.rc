@@ -56,6 +56,7 @@ BEGIN
         MENUITEM "&Fill Space",                 IDM_FLOOR_FILL
         MENUITEM "Stairs N/S",                  IDM_FLOOR_NSTAIRS
         MENUITEM "Stairs E/W",                  IDM_FLOOR_WSTAIRS
+        MENUITEM "Spiral Stairs",               IDM_FLOOR_SPIRALSTAIRS
         MENUITEM SEPARATOR
         MENUITEM "Fill Wall",                   IDM_WALL_FILL
         MENUITEM "Open Wall",                   IDM_WALL_OPEN

@@ -691,6 +691,8 @@ FloorType GetFloorTypeFromMenu(int menuID)
 			return FLOOR_SWFILL;
 		case IDM_FLOOR_SEFILL:
 			return FLOOR_SEFILL;
+		case IDM_FLOOR_SPIRALSTAIRS:
+			return FLOOR_SPIRALSTAIRS;
 		default:
 			return FLOOR_FAIL;
 	}

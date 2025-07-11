@@ -50,6 +50,7 @@
 #define IDM_OBJECT_CLEAR                32799
 #define IDM_OBJECT_WATER                32800
 #define IDM_OBJECT_RUBBLE               32801
+#define IDM_FLOOR_SPIRALSTAIRS          32802
 #define IDM_END_TOOLS_LIST              33000
 #define IDC_STATIC                      -1
 

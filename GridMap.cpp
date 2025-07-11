@@ -10,11 +10,13 @@
 #include "GridMap.h"
 #include <stdio.h>
 #include <algorithm>
+#include <cmath>
 using std::min;
 using std::max;
 
 // Constants
 const int DEFAULT_CELL_SIZE = 20;
+const float TAU = 6.283185307f;
 const float SQRT2_2 = 0.70710678f;
 
 //------------------------------------------------------------------
@@ -436,6 +438,56 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
 		Polygon(hDC, triangle, 3);
 	}
+
+	// Spiral stairs
+	if (cell.floor == FLOOR_SPIRALSTAIRS) {
+
+		// Find parameters
+		int halfCell = cellSize / 2;
+		int radius = halfCell;
+		int cx = x + halfCell;
+		int cy = y + halfCell;
+
+		// Arc parameters (open at top)
+		double arcStartAngle = TAU/4 + 0.5;
+		double arcEndAngle   = TAU/4 - 0.5;
+
+		// Calculate bounding rect of the circle
+		int left   = cx - radius;
+		int top    = cy - radius;
+		int right  = cx + radius;
+		int bottom = cy + radius;
+
+		// Calculate arc start/end points
+		int xStart = cx + (int)(radius * cos(arcStartAngle));
+		int yStart = cy - (int)(radius * sin(arcStartAngle));
+		int xEnd   = cx + (int)(radius * cos(arcEndAngle));
+		int yEnd   = cy - (int)(radius * sin(arcEndAngle));
+
+		// Draw main circle with arc missing
+		Arc(hDC, left, top, right, bottom, xStart, yStart, xEnd, yEnd);
+
+		// Draw center circle (percent of outer radius)
+		int innerRadius = (int)(radius * 0.20);
+		SelectObject(hDC, GetStockObject(BLACK_BRUSH));		
+		Ellipse(hDC,
+		        cx - innerRadius, cy - innerRadius,
+		        cx + innerRadius, cy + innerRadius);
+
+		// Compute spoke dimensions
+		const int numSpokes = 12;
+		double arcSweepAngle = TAU - (arcStartAngle - arcEndAngle);
+		double anglePerSpoke = arcSweepAngle / numSpokes;
+
+		// Draw the spokes
+		for (int i = 0; i <= numSpokes; ++i) {
+			double angle = arcStartAngle + anglePerSpoke * i;
+			int xOuter = cx + (int)(radius * cos(angle));
+			int yOuter = cy - (int)(radius * sin(angle));
+			MoveToEx(hDC, cx, cy, nullptr);
+			LineTo(hDC, xOuter, yOuter);
+		}
+	}
 }
 
 // Paint one cell's north wall
@@ -525,7 +577,7 @@ void GridMap::LetterS(HDC hDC, int x, int y)
 	int textY = y - textSize.cy / 2;
 
 	// Draw the letter "S"
-	SetBkMode(hDC, OPAQUE);	
+	SetBkMode(hDC, OPAQUE);
 	TextOut(hDC, textX, textY, TEXT("S"), 1);
 
 	// Clean up
@@ -540,7 +592,7 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 
 	// Water texture
 	if (cell.object == OBJECT_WATER) {
-		
+
 		// Set line increment
 		const int linesPerEdge = 4;
 		int inc = cellSize / linesPerEdge;
@@ -607,13 +659,6 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 // Is this floor type space-filling?
 bool IsFloorFillType(FloorType floor)
 {
-	switch (floor) {
-		case FLOOR_FILL:
-		case FLOOR_NEFILL:
-		case FLOOR_NWFILL:
-		case FLOOR_SEFILL:
-		case FLOOR_SWFILL:
-			return true;
-	}
-	return false;
+	return (floor == FLOOR_FILL
+	        || (FLOOR_NWFILL <= floor && floor <= FLOOR_SEFILL));
 }
