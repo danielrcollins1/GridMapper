@@ -693,6 +693,8 @@ FloorType GetFloorTypeFromMenu(int menuID)
 			return FLOOR_SEFILL;
 		case IDM_FLOOR_SPIRALSTAIRS:
 			return FLOOR_SPIRALSTAIRS;
+		case IDM_FLOOR_WATER:
+			return FLOOR_WATER;
 		default:
 			return FLOOR_FAIL;
 	}
@@ -723,8 +725,6 @@ ObjectType GetObjectTypeFromMenu(int menuID)
 	switch (menuID) {
 		case IDM_OBJECT_CLEAR:
 			return OBJECT_NONE;
-		case IDM_OBJECT_WATER:
-			return OBJECT_WATER;
 		case IDM_OBJECT_RUBBLE:
 			return OBJECT_RUBBLE;
 		case IDM_OBJECT_PILLAR:

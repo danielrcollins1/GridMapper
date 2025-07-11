@@ -54,6 +54,7 @@ BEGIN
     BEGIN
         MENUITEM "&Open Space",                 IDM_FLOOR_OPEN
         MENUITEM "&Fill Space",                 IDM_FLOOR_FILL
+        MENUITEM "Water Space",                 IDM_FLOOR_WATER
         MENUITEM "Stairs N/S",                  IDM_FLOOR_NSTAIRS
         MENUITEM "Stairs E/W",                  IDM_FLOOR_WSTAIRS
         MENUITEM "Spiral Stairs",               IDM_FLOOR_SPIRALSTAIRS
@@ -74,9 +75,8 @@ BEGIN
         MENUITEM "Single Door NW/SE",           IDM_FLOOR_NWDOOR
         MENUITEM SEPARATOR
         MENUITEM "Clear Object",                IDM_OBJECT_CLEAR
-        MENUITEM "Water Object",                IDM_OBJECT_WATER
-        MENUITEM "Rubble Object",               IDM_OBJECT_RUBBLE
         MENUITEM "Pillar Object",               IDM_OBJECT_PILLAR
+        MENUITEM "Rubble Object",               IDM_OBJECT_RUBBLE
         MENUITEM SEPARATOR
         MENUITEM "Fill Entire Map",             IDM_FILL_MAP
         MENUITEM "Clear Entire Map",            IDM_CLEAR_MAP

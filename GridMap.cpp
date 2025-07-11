@@ -367,7 +367,7 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	// Set pen for other features
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 
-	// Stairs (either direction)
+	// Stairs (series of parallel lines)
 	if (cell.floor == FLOOR_NSTAIRS || cell.floor == FLOOR_WSTAIRS) {
 		const int stairsPerSquare = 5;
 		for (int s = 1; s < stairsPerSquare; s++) {
@@ -397,7 +397,7 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 		LineTo(hDC, x, y + cellSize);
 	}
 
-	// Diagonal Door (either direction)
+	// Diagonal Door (diamond in square center)
 	if (cell.floor == FLOOR_NEDOOR || cell.floor == FLOOR_NWDOOR) {
 		SelectObject(hDC, GetStockObject(BLACK_PEN));
 		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
@@ -418,7 +418,7 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 		Polygon(hDC, pts, 4);
 	}
 
-	// Diagonal half-fill
+	// Diagonal half-filled space
 	if (FLOOR_NWFILL <= cell.floor && cell.floor <= FLOOR_SEFILL) {
 
 		POINT triangle[3];
@@ -450,7 +450,7 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 		Polygon(hDC, triangle, 3);
 	}
 
-	// Spiral stairs
+	// Spiral stairs (arc, circle, and spokes)
 	if (cell.floor == FLOOR_SPIRALSTAIRS) {
 
 		// Find parameters
@@ -497,6 +497,34 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 			int yOuter = cy - (int)(radius * sin(angle));
 			MoveToEx(hDC, cx, cy, nullptr);
 			LineTo(hDC, xOuter, yOuter);
+		}
+	}
+	
+	// Water texture (diagonal hatched lines)
+	if (cell.floor == FLOOR_WATER) {
+
+		// Set line increment
+		const int linesPerEdge = 4;
+		int inc = cellSize / linesPerEdge;
+
+		// Draw lines from top-left to bottom-right
+		for (int offset = -cellSize; offset <= cellSize; offset += inc) {
+			int startX = x + max(0, offset);
+			int startY = y + max(0, -offset);
+			int endX = x + min(cellSize, cellSize + offset);
+			int endY = y + min(cellSize, cellSize - offset);
+			MoveToEx(hDC, startX, startY, NULL);
+			LineTo(hDC, endX, endY);
+		}
+
+		// Draw lines from top-right to bottom-left
+		for (int offset = 1; offset <= 2 * cellSize; offset += inc) {
+			int startX = x + min(cellSize, offset);
+			int startY = y + max(0, offset - cellSize);
+			int endX = x + max(0, offset - cellSize);
+			int endY = y + min(cellSize, offset);
+			MoveToEx(hDC, startX, startY, NULL);
+			LineTo(hDC, endX, endY);
 		}
 	}
 }
@@ -601,35 +629,16 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 {
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 
-	// Water texture (diagonal hatched lines)
-	if (cell.object == OBJECT_WATER) {
-
-		// Set line increment
-		const int linesPerEdge = 4;
-		int inc = cellSize / linesPerEdge;
-
-		// Draw lines from top-left to bottom-right
-		for (int offset = -cellSize; offset <= cellSize; offset += inc) {
-			int startX = x + max(0, offset);
-			int startY = y + max(0, -offset);
-			int endX = x + min(cellSize, cellSize + offset);
-			int endY = y + min(cellSize, cellSize - offset);
-			MoveToEx(hDC, startX, startY, NULL);
-			LineTo(hDC, endX, endY);
-		}
-
-		// Draw lines from top-right to bottom-left
-		for (int offset = 1; offset <= 2 * cellSize; offset += inc) {
-			int startX = x + min(cellSize, offset);
-			int startY = y + max(0, offset - cellSize);
-			int endX = x + max(0, offset - cellSize);
-			int endY = y + min(cellSize, offset);
-			MoveToEx(hDC, startX, startY, NULL);
-			LineTo(hDC, endX, endY);
-		}
+	// Pillar object (black circle)
+	if (cell.object == OBJECT_PILLAR) {
+		int cx = x + cellSize / 2;
+		int cy = y + cellSize / 2;
+		int radius = (int)(cellSize/2 * 0.50);
+		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+		Ellipse(hDC, cx - radius, cy - radius, cx + radius, cy + radius);
 	}
 
-	// Rubble texture (several random "x" characters)
+	// Rubble texture (many random "x" characters)
 	if (cell.object == OBJECT_RUBBLE) {
 
 		int fontHeight = (int) (cellSize * 0.30);
@@ -660,14 +669,5 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		// Cleanup
 		SelectObject(hDC, hOldFont);
 		DeleteObject(hFont);
-	}
-
-	// Pillar object (black circle)
-	if (cell.object == OBJECT_PILLAR) {
-		int cx = x + cellSize / 2;
-		int cy = y + cellSize / 2;
-		int radius = (int)(cellSize/2 * 0.50);
-		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-		Ellipse(hDC, cx - radius, cy - radius, cx + radius, cy + radius);
 	}
 }

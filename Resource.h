@@ -41,6 +41,7 @@
 #define IDM_WALL_SINGLE_DOOR            32789
 #define IDM_WALL_DOUBLE_DOOR            32790
 #define IDM_WALL_SECRET_DOOR            32791
+#define IDM_FLOOR_WATER                 32792
 #define IDM_FLOOR_NEDOOR                32793
 #define IDM_FLOOR_NWDOOR                32794
 #define IDM_FLOOR_NWFILL                32795
@@ -48,10 +49,9 @@
 #define IDM_FLOOR_SWFILL                32797
 #define IDM_FLOOR_SEFILL                32798
 #define IDM_OBJECT_CLEAR                32799
-#define IDM_OBJECT_WATER                32800
-#define IDM_OBJECT_RUBBLE               32801
-#define IDM_FLOOR_SPIRALSTAIRS          32802
-#define IDM_OBJECT_PILLAR               32803
+#define IDM_OBJECT_RUBBLE               32800
+#define IDM_FLOOR_SPIRALSTAIRS          32801
+#define IDM_OBJECT_PILLAR               32802
 #define IDM_END_TOOLS_LIST              33000
 #define IDC_STATIC                      -1
 
