@@ -37,14 +37,14 @@ enum FloorType {
 // Wall types
 enum WallType {
 	WALL_FAIL = -1,
-	WALL_OPEN, WALL_FILL, WALL_SINGLE_DOOR, WALL_DOUBLE_DOOR, 
+	WALL_OPEN, WALL_FILL, WALL_SINGLE_DOOR, WALL_DOUBLE_DOOR,
 	WALL_SECRET_DOOR
 };
 
 // Object types
 enum ObjectType {
 	OBJECT_FAIL = -1,
-	OBJECT_NONE, OBJECT_PILLAR, OBJECT_STATUE, OBJECT_TRAPDOOR, 
+	OBJECT_NONE, OBJECT_PILLAR, OBJECT_STATUE, OBJECT_TRAPDOOR,
 	OBJECT_PIT, OBJECT_RUBBLE, OBJECT_STALGMITE, OBJECT_SINKHOLE
 };
 
@@ -92,8 +92,8 @@ class GridMap {
 		void setFilename(char *name);
 
 		// Paint on a display context
-		void paint(HDC hDC);
-		void paintCell(HDC hDC, int x, int y, bool allWalls);
+		void paint(HDC hDC, bool showGrid);
+		void paintCell(HDC hDC, int x, int y, bool allWalls, bool showGrid);
 
 		// Save to file
 		int save();
@@ -102,9 +102,11 @@ class GridMap {
 
 		// Painting helper functions
 		void paintCellFloor(HDC hDC, int xPos, int yPos, GridCell cell);
-		void paintCellNWall(HDC hDC, int xPos, int yPos, GridCell cell);
-		void paintCellWWall(HDC hDC, int xPos, int yPos, GridCell cell);
 		void paintCellObject(HDC hDC, int xPos, int yPos, GridCell cell);
+		void paintCellNWall(
+		    HDC hDC, int xPos, int yPos, GridCell cell, bool showGrid);
+		void paintCellWWall(
+		    HDC hDC, int xPos, int yPos, GridCell cell, bool showGrid);
 		void LetterS(HDC hDC, int x, int y);
 
 	private:

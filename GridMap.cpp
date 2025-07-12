@@ -310,7 +310,7 @@ HPEN ThinGrayPen = NULL;
 HPEN ThickBlackPen = NULL;
 
 // Paint entire map on device context
-void GridMap::paint(HDC hDC)
+void GridMap::paint(HDC hDC, bool showGrid)
 {
 	// Create pens if needed
 	if (!ThickBlackPen) {
@@ -323,29 +323,29 @@ void GridMap::paint(HDC hDC)
 	// Draw each grid cell
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
-			paintCell(hDC, x, y, false);
+			paintCell(hDC, x, y, false, showGrid);
 		}
 	}
 }
 
 // Paint one cell on device context
-void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
+void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls, bool showGrid)
 {
 	// Paint everything controlled by this cell
 	int xPos = x * cellSize;
 	int yPos = y * cellSize;
 	paintCellFloor(hDC, xPos, yPos, grid[x][y]);
 	paintCellObject(hDC, xPos, yPos, grid[x][y]);
-	paintCellNWall(hDC, xPos, yPos, grid[x][y]);
-	paintCellWWall(hDC, xPos, yPos, grid[x][y]);
+	paintCellNWall(hDC, xPos, yPos, grid[x][y], showGrid);
+	paintCellWWall(hDC, xPos, yPos, grid[x][y], showGrid);
 
 	// Paint other adjacent walls if requested (partial repaint)
 	if (allWalls) {
 		if (x+1 < width) {
-			paintCellWWall(hDC, xPos + cellSize, yPos, grid[x+1][y]);
+			paintCellWWall(hDC, xPos + cellSize, yPos, grid[x+1][y], showGrid);
 		}
 		if (y+1 < height) {
-			paintCellNWall(hDC, xPos, yPos + cellSize, grid[x][y+1]);
+			paintCellNWall(hDC, xPos, yPos + cellSize, grid[x][y+1], showGrid);
 		}
 	}
 }
@@ -370,7 +370,7 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	// Stairs (series of parallel lines)
 	if (cell.floor == FLOOR_NSTAIRS || cell.floor == FLOOR_WSTAIRS) {
 		const int stairsPerSquare = 5;
-		for (int s = 1; s < stairsPerSquare; s++) {
+		for (int s = 0; s <= stairsPerSquare; s++) {
 			int d = s * cellSize / stairsPerSquare;
 			if (cell.floor == FLOOR_NSTAIRS) {
 				MoveToEx(hDC, x, y + d, NULL);
@@ -530,12 +530,20 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 }
 
 // Paint one cell's north wall
-void GridMap::paintCellNWall(HDC hDC, int x, int y, GridCell cell)
+void GridMap::paintCellNWall(
+    HDC hDC, int x, int y, GridCell cell, bool showGrid)
 {
-	// Paint base clear or filled
-	SelectObject(hDC, cell.nwall ? ThickBlackPen : ThinGrayPen);
-	MoveToEx(hDC, x, y, NULL);
-	LineTo(hDC, x + cellSize, y);
+	// Paint grid line as needed
+	if (cell.nwall) {
+		SelectObject(hDC, ThickBlackPen);
+		MoveToEx(hDC, x, y, NULL);
+		LineTo(hDC, x + cellSize, y);
+	}
+	else if (showGrid) {
+		SelectObject(hDC, ThinGrayPen);
+		MoveToEx(hDC, x, y, NULL);
+		LineTo(hDC, x + cellSize, y);
+	}
 
 	// Set door size, pen, brush
 	int h = cellSize / 4; // half door size
@@ -560,12 +568,20 @@ void GridMap::paintCellNWall(HDC hDC, int x, int y, GridCell cell)
 }
 
 // Paint one cell's west wall
-void GridMap::paintCellWWall(HDC hDC, int x, int y, GridCell cell)
+void GridMap::paintCellWWall(
+    HDC hDC, int x, int y, GridCell cell, bool showGrid)
 {
-	// Paint base clear or filled
-	SelectObject(hDC, cell.wwall ? ThickBlackPen : ThinGrayPen);
-	MoveToEx(hDC, x, y, NULL);
-	LineTo(hDC, x, y + cellSize);
+	// Paint grid line as needed
+	if (cell.wwall) {
+		SelectObject(hDC, ThickBlackPen);
+		MoveToEx(hDC, x, y, NULL);
+		LineTo(hDC, x, y + cellSize);
+	}
+	else if (showGrid) {
+		SelectObject(hDC, ThinGrayPen);
+		MoveToEx(hDC, x, y, NULL);
+		LineTo(hDC, x, y + cellSize);
+	}
 
 	// Set door size, pen, brush
 	int h = cellSize / 4; // half door size

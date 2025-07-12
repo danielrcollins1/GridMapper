@@ -83,6 +83,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Fill Entire Map",             IDM_FILL_MAP
         MENUITEM "Clear Entire Map",            IDM_CLEAR_MAP
+        MENUITEM "Show Grid Lines",             IDM_SHOW_GRID
+        MENUITEM "Draw Rough Edges",            IDM_ROUGH_EDGES
         MENUITEM "Set Grid Size...",            IDM_SET_GRID_SIZE
         MENUITEM SEPARATOR
         MENUITEM "&Copy to Clipboard",          IDM_COPY

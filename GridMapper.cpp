@@ -32,6 +32,8 @@ TCHAR szWindowClass[MAX_LOADSTRING];
 GridMap *gridmap = NULL;
 int selectedFeature = 0;
 bool LButtonCapture = false;
+bool ShowGridLines = true;
+bool DrawRoughEdges = false;
 char cmdLine[GRID_FILENAME_MAX] = "\0";
 
 // Function prototypes
@@ -134,6 +136,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	srand((unsigned int) time(NULL));
 	BkgdPen = CreatePen(PS_SOLID, 1, 0x00808080);
 	SetSelectedFeature(hWnd, IDM_FLOOR_OPEN);
+	CheckMenuItem(GetMenu(hWnd), IDM_SHOW_GRID, MF_BYCOMMAND | MF_CHECKED);
 	if (!strlen(cmdLine) || !NewMapFromFile(hWnd, cmdLine)) {
 		NewMapFromSpecs(hWnd, DefaultMapWidth, DefaultMapHeight);
 	}
@@ -248,6 +251,9 @@ bool CommandProc(HWND hWnd, int cmdId)
 		case IDM_ABOUT:
 			DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
 			break;
+		case IDM_SHOW_GRID:
+			ToggleGridLines(hWnd);
+			break;
 		default:
 			return false;
 	}
@@ -276,7 +282,7 @@ int GetGridSize()
 
 void UpdateBkgdCell(HWND hWnd, int x, int y)
 {
-	gridmap->paintCell(BkgdDC, x, y, true);
+	gridmap->paintCell(BkgdDC, x, y, true, ShowGridLines);
 	UpdateEntireWindow(hWnd);
 }
 
@@ -621,9 +627,19 @@ void ChangeNorthWall(HWND hWnd, int x, int y, int newFeature)
 void ClearMap(HWND hWnd, bool open)
 {
 	gridmap->clearMap(open ? FLOOR_OPEN : FLOOR_FILL);
-	gridmap->paint(BkgdDC);
+	gridmap->paint(BkgdDC, ShowGridLines);
 	UpdateEntireWindow(hWnd);
 	SetSelectedFeature(hWnd, open ? IDM_FLOOR_FILL : IDM_FLOOR_OPEN);
+}
+
+void ToggleGridLines(HWND hWnd)
+{
+	ShowGridLines = !ShowGridLines;
+	CheckMenuItem(
+	    GetMenu(hWnd), IDM_SHOW_GRID,
+	    MF_BYCOMMAND | (ShowGridLines ? MF_CHECKED : MF_UNCHECKED));
+	SetBkgdDC(hWnd);
+	UpdateEntireWindow(hWnd);
 }
 
 /*
@@ -651,15 +667,15 @@ void FillCell(HWND hWnd, int x, int y)
 		gridmap->setCellNWall(x, y+1, WALL_OPEN);
 
 	// Repaint elements
-	gridmap->paintCell(BkgdDC, x, y, true);
+	gridmap->paintCell(BkgdDC, x, y, true, ShowGridLines);
 	if (x-1 >= 0)
-		gridmap->paintCell(BkgdDC, x-1, y, true);
+		gridmap->paintCell(BkgdDC, x-1, y, true, ShowGridLines);
 	if (y-1 >= 0)
-		gridmap->paintCell(BkgdDC, x, y-1, true);
+		gridmap->paintCell(BkgdDC, x, y-1, true, ShowGridLines);
 	if (x+1 < width)
-		gridmap->paintCell(BkgdDC, x+1, y, true);
+		gridmap->paintCell(BkgdDC, x+1, y, true, ShowGridLines);
 	if (y+1 < height)
-		gridmap->paintCell(BkgdDC, x, y+1, true);
+		gridmap->paintCell(BkgdDC, x, y+1, true, ShowGridLines);
 	UpdateEntireWindow(hWnd);
 }
 
@@ -734,7 +750,7 @@ ObjectType GetObjectTypeFromMenu(int menuID)
 		case IDM_OBJECT_TRAPDOOR:
 			return OBJECT_TRAPDOOR;
 		case IDM_OBJECT_PIT:
-			return OBJECT_PIT;			
+			return OBJECT_PIT;
 		default:
 			return OBJECT_FAIL;
 	}
@@ -775,7 +791,7 @@ void SetBkgdDC(HWND hWnd)
 	        gridmap->getHeightPixels());
 	if (BkgdBitmap) {
 		SelectObject(BkgdDC, BkgdBitmap);
-		gridmap->paint(BkgdDC);
+		gridmap->paint(BkgdDC, ShowGridLines);
 	}
 	else {
 		MessageBox(

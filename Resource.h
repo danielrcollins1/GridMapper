@@ -15,6 +15,8 @@
 #define IDR_MAINFRAME                   128
 #define IDD_NEWMAP                      130
 #define IDD_SETGRIDSIZE                 135
+#define IDM_SHOW_GRID                   136
+#define IDM_ROUGH_EDGES                 137
 #define IDC_NEW_WIDTH                   1010
 #define IDC_NEW_HEIGHT                  1011
 #define IDC_PXLS_PER_SQUARE             1014
