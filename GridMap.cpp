@@ -651,7 +651,7 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		int radius = (int)(halfCell * 0.70);
 
 		// Draw the circle
-		SelectObject(hDC, GetStockObject(NULL_BRUSH));
+		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
 		Ellipse(hDC, cx - radius, cy - radius, cx + radius, cy + radius);
 
 		// Get parameters for 10 points (outer and inner vertices)
@@ -682,6 +682,7 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		int innerY = y + (cellSize - innerSize) / 2;
 
 		// Draw the inner square
+		SelectObject(hDC, GetStockObject(NULL_BRUSH));
 		Rectangle(hDC, innerX, innerY,
 		          innerX + innerSize, innerY + innerSize);
 
@@ -721,6 +722,7 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		int innerY = y + (cellSize - innerSize) / 2;
 
 		// Draw the square outline
+		SelectObject(hDC, GetStockObject(NULL_BRUSH));
 		Rectangle(hDC, innerX, innerY, innerX + innerSize, innerY + innerSize);
 
 		// Top-left to bottom-right diagonal
@@ -732,10 +734,10 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		LineTo(hDC, innerX, innerY + innerSize);
 	}
 
-	// Rubble texture (many random "x" characters)
+	// Rubble texture (bunch of random "x" characters)
 	if (cell.object == OBJECT_RUBBLE) {
 
-		int fontHeight = (int) (cellSize * 0.30);
+		int fontHeight = (int)(cellSize * 0.30);
 
 		// Create font with desied height
 		HFONT hFont =
