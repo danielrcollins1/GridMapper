@@ -16,7 +16,7 @@
 	Controls its owns floor, north & west walls, and any object.
 */
 struct GridCell {
-	char floor, nwall, wwall, object;
+	unsigned char floor, nwall, wwall, object;
 };
 
 /*
@@ -27,25 +27,23 @@ struct GridCell {
 
 // Floor types
 enum FloorType {
-	FLOOR_FAIL = -1,
 	FLOOR_FILL, FLOOR_OPEN, FLOOR_NSTAIRS, FLOOR_WSTAIRS,
 	FLOOR_NEWALL, FLOOR_NWWALL, FLOOR_NEDOOR, FLOOR_NWDOOR,
 	FLOOR_NWFILL, FLOOR_NEFILL, FLOOR_SWFILL, FLOOR_SEFILL,
-	FLOOR_SPIRALSTAIRS, FLOOR_WATER
+	FLOOR_SPIRALSTAIRS, FLOOR_WATER, FLOOR_FAIL = 255
 };
 
 // Wall types
 enum WallType {
-	WALL_FAIL = -1,
 	WALL_OPEN, WALL_FILL, WALL_SINGLE_DOOR, WALL_DOUBLE_DOOR,
-	WALL_SECRET_DOOR
+	WALL_SECRET_DOOR, WALL_FAIL = 255
 };
 
 // Object types
 enum ObjectType {
-	OBJECT_FAIL = -1,
 	OBJECT_NONE, OBJECT_PILLAR, OBJECT_STATUE, OBJECT_TRAPDOOR,
-	OBJECT_PIT, OBJECT_RUBBLE, OBJECT_STALGMITE, OBJECT_SINKHOLE
+	OBJECT_PIT, OBJECT_RUBBLE, OBJECT_STALGMITE, OBJECT_SINKHOLE,
+	OBJECT_FAIL = 255
 };
 
 // Feature info function(s)
