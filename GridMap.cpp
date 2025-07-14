@@ -392,6 +392,9 @@ void GridMap::paint(HDC hDC)
 // Paint one cell on device context
 void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
 {
+	// Seed random for this cell
+	srand(cellHash(x, y));
+	
 	// Paint everything controlled by this cell
 	int cellSize = getCellSizePixels();
 	int xPos = x * cellSize;
@@ -859,8 +862,10 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 
 		// Draw a number of random "x" characters
 		for (int i = 0; i < 10; ++i) {
-			int tx = x + rand() % (cellSize - textSize.cx);
-			int ty = y + rand() % (cellSize - textSize.cy);
+			int pctx = rand() % 100;
+			int pcty = rand() % 100;
+			int tx = x + (cellSize - textSize.cx) * pctx / 100;
+			int ty = y + (cellSize - textSize.cy) * pcty / 100;
 			TextOut(hDC, tx, ty, TEXT("x"), 1);
 		}
 
@@ -870,8 +875,9 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 	}
 }
 
-double GridMap::randomUnit() {
-    return 2.0 * rand() / RAND_MAX - 1.0;
+double GridMap::randomUnit() const
+{
+	return 2.0 * rand() / RAND_MAX - 1.0;
 }
 
 void GridMap::generateFractalCurveRecursive(
@@ -928,4 +934,17 @@ void GridMap::drawFractalCapAndFill(HDC hDC, int x, int y)
 	// Fill with black
 	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
 	Polygon(hDC, curve.data(), static_cast<int>(curve.size()));
+}
+
+// Hash a coordinate (for use as random seed)
+unsigned GridMap::cellHash(int x, int y) const
+{
+    unsigned int h = x;
+    h = h * 31 + y;      // Mix x and y with a prime
+    h ^= (h >> 16);      // Bit mixing
+    h *= 0x85ebca6b;
+    h ^= (h >> 13);
+    h *= 0xc2b2ae35;
+    h ^= (h >> 16);
+    return h;
 }

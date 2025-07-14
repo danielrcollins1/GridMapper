@@ -113,9 +113,10 @@ class GridMap {
 		void paintCellNWall(HDC hDC, int xPos, int yPos, GridCell cell);
 		void paintCellWWall(HDC hDC, int xPos, int yPos, GridCell cell);
 		void LetterS(HDC hDC, int x, int y);
+		unsigned cellHash(int x, int y) const;
 
 		// Rough-edge painting functions
-		double randomUnit();
+		double randomUnit() const;
 		void generateFractalCurveRecursive(
 		    std::vector<POINT>& points,
 		    int x1, int y1, int x2, int y2, double displacement);
