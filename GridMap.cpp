@@ -430,6 +430,15 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	// Testing rough edge on north
 //	if (displayRoughEdges() && cell.floor == FLOOR_FILL && y > 0
 //	        && grid[x/cellSize][y/cellSize - 1].floor == FLOOR_OPEN) {
+//
+//		// Draw ground white
+//		SelectObject(hDC, GetStockObject(WHITE_PEN));
+//		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
+//		Rectangle(hDC, x, y, x + cellSize, y + cellSize);
+//
+//		// Draw the black fractal cap
+//		SelectObject(hDC, GetStockObject(BLACK_PEN));
+//		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
 //		drawFractalCapAndFill(hDC, x, y);
 //	}
 //	else {

@@ -679,16 +679,22 @@ void FillCell(HWND hWnd, int x, int y)
 	if (y+1 < width && !gridmap->canBuildNWall(x, y+1))
 		gridmap->setCellNWall(x, y+1, WALL_OPEN);
 
-	// Repaint elements
-	gridmap->paintCell(BkgdDC, x, y, true);
+	// Repaint prior cells
 	if (x-1 >= 0)
 		gridmap->paintCell(BkgdDC, x-1, y, true);
 	if (y-1 >= 0)
 		gridmap->paintCell(BkgdDC, x, y-1, true);
+
+	// Paint this cell
+	gridmap->paintCell(BkgdDC, x, y, true);
+
+	// Repaint later cells
 	if (x+1 < width)
 		gridmap->paintCell(BkgdDC, x+1, y, true);
 	if (y+1 < height)
 		gridmap->paintCell(BkgdDC, x, y+1, true);
+
+	// Update window
 	UpdateEntireWindow(hWnd);
 }
 

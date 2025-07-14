@@ -52,18 +52,18 @@ BEGIN
     END
     POPUP "&Tools"
     BEGIN
-        MENUITEM "&Open Space",                 IDM_FLOOR_OPEN
         MENUITEM "&Fill Space",                 IDM_FLOOR_FILL
         MENUITEM "Water Space",                 IDM_FLOOR_WATER
         MENUITEM "Stairs N/S",                  IDM_FLOOR_NSTAIRS
         MENUITEM "Stairs E/W",                  IDM_FLOOR_WSTAIRS
         MENUITEM "Spiral Stairs",               IDM_FLOOR_SPIRALSTAIRS
+        MENUITEM "&Open Space",                 IDM_FLOOR_OPEN
         MENUITEM SEPARATOR
         MENUITEM "Fill Wall",                   IDM_WALL_FILL
-        MENUITEM "Open Wall",                   IDM_WALL_OPEN
         MENUITEM "Single Door",                 IDM_WALL_SINGLE_DOOR
         MENUITEM "Double Door",                 IDM_WALL_DOUBLE_DOOR
         MENUITEM "Secret Door",                 IDM_WALL_SECRET_DOOR
+        MENUITEM "Clear Wall",                   IDM_WALL_OPEN
         MENUITEM SEPARATOR
         MENUITEM "Diagonal Fill NE",            IDM_FLOOR_NEFILL
         MENUITEM "Diagonal Fill SW",            IDM_FLOOR_SWFILL
@@ -74,12 +74,12 @@ BEGIN
         MENUITEM "Single Door NE/SW",           IDM_FLOOR_NEDOOR
         MENUITEM "Single Door NW/SE",           IDM_FLOOR_NWDOOR
         MENUITEM SEPARATOR
-        MENUITEM "Clear Object",                IDM_OBJECT_CLEAR
-        MENUITEM "Pillar Object",               IDM_OBJECT_PILLAR
         MENUITEM "Statue Object",               IDM_OBJECT_STATUE
+        MENUITEM "Pillar Object",               IDM_OBJECT_PILLAR
         MENUITEM "Trapdoor Object",             IDM_OBJECT_TRAPDOOR
         MENUITEM "Pit Object",                  IDM_OBJECT_PIT
         MENUITEM "Rubble Object",               IDM_OBJECT_RUBBLE
+        MENUITEM "Clear Object",                IDM_OBJECT_CLEAR
         MENUITEM SEPARATOR
         MENUITEM "Fill Entire Map",             IDM_FILL_MAP
         MENUITEM "Clear Entire Map",            IDM_CLEAR_MAP
