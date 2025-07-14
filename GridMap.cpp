@@ -10,6 +10,7 @@
 #include "GridMap.h"
 #include <stdio.h>
 #include <algorithm>
+#include <cstdlib>
 #include <cassert>
 #include <cmath>
 using std::min;
@@ -87,11 +88,10 @@ bool GridMap::displayRoughEdges() const
 }
 
 // Toggle the rough edges display
-void GridMap::toggleRoughEdges() 
+void GridMap::toggleRoughEdges()
 {
-	displayCode ^= MASK_ROUGH_EDGES;	
+	displayCode ^= MASK_ROUGH_EDGES;
 }
-
 
 // Do we want to hide grid lines?
 bool GridMap::displayNoGrid() const
@@ -114,6 +114,7 @@ GridMap::GridMap(int _width, int _height)
 {
 	width = _width;
 	height = _height;
+	displayCode = 0;
 	setCellSizePixels(getCellSizeDefault());
 	grid = new GridCell*[width];
 	for (int x = 0; x < width; x++)
@@ -123,7 +124,7 @@ GridMap::GridMap(int _width, int _height)
 			grid[x][y].floor = FLOOR_FILL;
 			grid[x][y].nwall = WALL_OPEN;
 			grid[x][y].wwall = WALL_OPEN;
-			grid[x][y].object = 0;
+			grid[x][y].object = OBJECT_NONE;
 		}
 	}
 	filename[0] = '\0';
@@ -177,8 +178,7 @@ GridMap::GridMap(char *_filename)
 
 fail:
 	grid = NULL;
-	width = height = 0;
-	setCellSizePixels(0);
+	width = height = displayCode = 0;
 	filename[0] = '\0';
 	fileLoadOk = false;
 }
@@ -426,6 +426,15 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 		SelectObject(hDC, GetStockObject(WHITE_PEN));
 		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
 	}
+
+	// Testing rough edge on north
+//	if (displayRoughEdges() && cell.floor == FLOOR_FILL && y > 0
+//	        && grid[x/cellSize][y/cellSize - 1].floor == FLOOR_OPEN) {
+//		drawFractalCapAndFill(hDC, x, y);
+//	}
+//	else {
+//		Rectangle(hDC, x, y, x + cellSize, y + cellSize);
+//	}
 	Rectangle(hDC, x, y, x + cellSize, y + cellSize);
 
 	// Set pen for other features
@@ -850,4 +859,64 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 		SelectObject(hDC, hOldFont);
 		DeleteObject(hFont);
 	}
+}
+
+double GridMap::randomUnit() {
+    return 2.0 * rand() / RAND_MAX - 1.0;
+}
+
+void GridMap::generateFractalCurveRecursive(
+    std::vector<POINT>& points,
+    int x1, int y1,
+    int x2, int y2,
+    double displacement)
+{
+	if (abs(x2 - x1) < 2) {
+		points.push_back({ x2, y2 });
+		return;
+	}
+
+	int mx = (x1 + x2) / 2;
+	int my = (y1 + y2) / 2;
+
+	// Apply random vertical displacement
+	my += static_cast<int>(displacement * randomUnit());
+
+	generateFractalCurveRecursive(
+	    points, x1, y1, mx, my, displacement / 2.0);
+	generateFractalCurveRecursive(
+	    points, mx, my, x2, y2, displacement / 2.0);
+}
+
+std::vector<POINT> GridMap::generateFractalCurveWithNoise(
+    int x, int y, int length, double initialDisplacement)
+{
+	std::vector<POINT> curve;
+	int x1 = x;
+	int y1 = y;
+	int x2 = x + length;
+	int y2 = y;
+	curve.push_back({ x1, y1 });
+	generateFractalCurveRecursive(
+	    curve, x1, y1, x2, y2, initialDisplacement);
+	return curve;
+}
+
+// Draw a north floor quadrant with riugh edge
+void GridMap::drawFractalCapAndFill(HDC hDC, int x, int y)
+{
+	// Create the fractal curve along the top
+	int cellSize = getCellSizePixels();
+	std::vector<POINT> curve = generateFractalCurveWithNoise(x, y, cellSize);
+
+	// Add center point to form a filled polygon
+	POINT center = { x + cellSize / 2, y + cellSize / 2 };
+	curve.push_back(center);
+
+	// Close the shape by connecting to start
+	curve.push_back(curve.front());
+
+	// Fill with black
+	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+	Polygon(hDC, curve.data(), static_cast<int>(curve.size()));
 }

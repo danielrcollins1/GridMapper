@@ -243,14 +243,18 @@ bool CommandProc(HWND hWnd, int cmdId)
 			DialogBox(hInst, (LPCTSTR)IDD_NEWMAP, hWnd, (DLGPROC)NewDialog);
 			break;
 		case IDM_SET_GRID_SIZE:
-			DialogBox(hInst, (LPCTSTR)IDD_SETGRIDSIZE, hWnd,
-			          (DLGPROC)GridSizeDialog);
+			DialogBox(
+			    hInst, (LPCTSTR)IDD_SETGRIDSIZE, hWnd,
+			    (DLGPROC)GridSizeDialog);
 			break;
 		case IDM_ABOUT:
 			DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
 			break;
 		case IDM_HIDE_GRID:
 			ToggleGridLines(hWnd);
+			break;
+		case IDM_ROUGH_EDGES:
+			ToggleRoughEdges(hWnd);
 			break;
 		default:
 			return false;
@@ -640,6 +644,17 @@ void ToggleGridLines(HWND hWnd)
 	UpdateEntireWindow(hWnd);
 }
 
+void ToggleRoughEdges(HWND hWnd)
+{
+	gridmap->toggleRoughEdges();
+	bool roughEdges = gridmap->displayRoughEdges();
+	CheckMenuItem(
+	    GetMenu(hWnd), IDM_ROUGH_EDGES,
+	    MF_BYCOMMAND | (roughEdges ? MF_CHECKED : MF_UNCHECKED));
+	SetBkgdDC(hWnd);
+	UpdateEntireWindow(hWnd);
+}
+
 /*
 	Perform a space-filling operation.
 	The new cell floor should be set before calling this function.
@@ -815,8 +830,10 @@ void SetNewMap(HWND hWnd, GridMap *newmap)
 	SetBkgdDC(hWnd);
 	SetScrollRange(hWnd, true);
 	SetSelectedFeature(hWnd, IDM_FLOOR_OPEN);
-	CheckMenuItem(menu, IDM_HIDE_GRID, MF_BYCOMMAND | MF_UNCHECKED);
-	CheckMenuItem(menu, IDM_ROUGH_EDGES, MF_BYCOMMAND | MF_UNCHECKED);
+	CheckMenuItem(GetMenu(hWnd), IDM_HIDE_GRID, MF_BYCOMMAND | 
+		(gridmap->displayNoGrid() ? MF_CHECKED : MF_UNCHECKED));
+	CheckMenuItem(GetMenu(hWnd), IDM_ROUGH_EDGES, MF_BYCOMMAND | 
+		(gridmap->displayRoughEdges() ? MF_CHECKED : MF_UNCHECKED));
 	UpdateEntireWindow(hWnd);
 }
 
@@ -1041,24 +1058,24 @@ LRESULT CALLBACK GridSizeDialog(
 				if (newSize < gridmap->getCellSizeMin()) {
 					std::stringstream message;
 					message << "Minimum grid size is "
-					        << gridmap->getCellSizeMin() 
-							<< " pixels per square.";
+					        << gridmap->getCellSizeMin()
+					        << " pixels per square.";
 					MessageBox(
 					    hDlg, message.str().c_str(),
 					    "Size Too Small", MB_OK|MB_ICONWARNING);
 				}
-				
+
 				// Check size too large
 				else if (newSize > gridmap->getCellSizeMax()) {
 					std::stringstream message;
 					message << "Maximum grid size is "
-					        << gridmap->getCellSizeMax() 
-							<< " pixels per square.";
+					        << gridmap->getCellSizeMax()
+					        << " pixels per square.";
 					MessageBox(
 					    hDlg, message.str().c_str(),
 					    "Size Too Large", MB_OK|MB_ICONWARNING);
 				}
-				
+
 				// Handle acceptable size
 				else {
 					ChangeGridSize(GetWindow(hDlg, GW_OWNER), newSize);

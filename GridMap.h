@@ -10,6 +10,7 @@
 #ifndef GRIDMAP_H
 #define GRIDMAP_H
 #include <windows.h>
+#include <vector>
 
 /*
 	Structure for a single grid cell.
@@ -112,6 +113,15 @@ class GridMap {
 		void paintCellNWall(HDC hDC, int xPos, int yPos, GridCell cell);
 		void paintCellWWall(HDC hDC, int xPos, int yPos, GridCell cell);
 		void LetterS(HDC hDC, int x, int y);
+
+		// Rough-edge painting functions
+		double randomUnit();
+		void generateFractalCurveRecursive(
+		    std::vector<POINT>& points,
+		    int x1, int y1, int x2, int y2, double displacement);
+		std::vector<POINT> generateFractalCurveWithNoise(
+		    int x, int y, int length, double initialDisplacement = 12.0);
+		void drawFractalCapAndFill(HDC hDC, int x, int y);
 
 	private:
 		GridCell **grid;

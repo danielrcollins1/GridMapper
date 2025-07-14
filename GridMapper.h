@@ -45,6 +45,7 @@ void SaveMap(HWND hWnd);
 void CopyMap(HWND hWnd);
 void PrintMap(HWND hWnd);
 void ToggleGridLines(HWND hWnd);
+void ToggleRoughEdges(HWND hWnd);
 void GetMapCoordsFromWindow(int xWin, int yWin, int& xMap, int& yMap);
 LRESULT CALLBACK NewDialog(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK GridSizeDialog(HWND, UINT, WPARAM, LPARAM);
