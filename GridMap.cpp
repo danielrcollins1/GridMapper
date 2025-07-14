@@ -392,7 +392,7 @@ void GridMap::paint(HDC hDC)
 // Paint one cell on device context
 void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
 {
-	// Seed random for this cell
+	// Seed randomizations for this cell
 	srand(cellHash(x, y));
 
 	// Paint everything controlled by this cell
