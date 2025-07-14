@@ -119,9 +119,10 @@ class GridMap {
 		double randomUnit() const;
 		void generateFractalCurveRecursive(
 		    std::vector<POINT>& points,
-		    int x1, int y1, int x2, int y2, double displacement);
+		    int x1, int y1, int x2, int y2, 
+			double displacement, int depthToGo);
 		std::vector<POINT> generateFractalCurveWithNoise(
-		    int x, int y, int length, double initialDisplacement = 12.0);
+		    int x, int y, int length, double initialDisplacement);
 		void drawFractalCapAndFill(HDC hDC, int x, int y);
 
 	private:

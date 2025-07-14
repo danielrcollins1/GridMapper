@@ -394,7 +394,7 @@ void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
 {
 	// Seed random for this cell
 	srand(cellHash(x, y));
-	
+
 	// Paint everything controlled by this cell
 	int cellSize = getCellSizePixels();
 	int xPos = x * cellSize;
@@ -884,23 +884,21 @@ void GridMap::generateFractalCurveRecursive(
     std::vector<POINT>& points,
     int x1, int y1,
     int x2, int y2,
-    double displacement)
+    double displacement,
+    int depthToGo)
 {
-	if (abs(x2 - x1) < 2) {
+	if (depthToGo == 0) {
 		points.push_back({ x2, y2 });
-		return;
 	}
-
-	int mx = (x1 + x2) / 2;
-	int my = (y1 + y2) / 2;
-
-	// Apply random vertical displacement
-	my += static_cast<int>(displacement * randomUnit());
-
-	generateFractalCurveRecursive(
-	    points, x1, y1, mx, my, displacement / 2.0);
-	generateFractalCurveRecursive(
-	    points, mx, my, x2, y2, displacement / 2.0);
+	else {
+		int mx = (x1 + x2) / 2;
+		int my = (y1 + y2) / 2;
+		my += static_cast<int>(displacement * randomUnit());
+		generateFractalCurveRecursive(
+		    points, x1, y1, mx, my, displacement / 2.0, depthToGo - 1);
+		generateFractalCurveRecursive(
+		    points, mx, my, x2, y2, displacement / 2.0, depthToGo - 1);
+	}
 }
 
 std::vector<POINT> GridMap::generateFractalCurveWithNoise(
@@ -913,7 +911,7 @@ std::vector<POINT> GridMap::generateFractalCurveWithNoise(
 	int y2 = y;
 	curve.push_back({ x1, y1 });
 	generateFractalCurveRecursive(
-	    curve, x1, y1, x2, y2, initialDisplacement);
+	    curve, x1, y1, x2, y2, initialDisplacement, 8);
 	return curve;
 }
 
@@ -922,7 +920,9 @@ void GridMap::drawFractalCapAndFill(HDC hDC, int x, int y)
 {
 	// Create the fractal curve along the top
 	int cellSize = getCellSizePixels();
-	std::vector<POINT> curve = generateFractalCurveWithNoise(x, y, cellSize);
+	std::vector<POINT> curve = 
+		generateFractalCurveWithNoise(
+			x, y, cellSize, cellSize * 0.33);
 
 	// Add center point to form a filled polygon
 	POINT center = { x + cellSize / 2, y + cellSize / 2 };
@@ -939,12 +939,12 @@ void GridMap::drawFractalCapAndFill(HDC hDC, int x, int y)
 // Hash a coordinate (for use as random seed)
 unsigned GridMap::cellHash(int x, int y) const
 {
-    unsigned int h = x;
-    h = h * 31 + y;      // Mix x and y with a prime
-    h ^= (h >> 16);      // Bit mixing
-    h *= 0x85ebca6b;
-    h ^= (h >> 13);
-    h *= 0xc2b2ae35;
-    h ^= (h >> 16);
-    return h;
+	unsigned int h = x;
+	h = h * 31 + y;      // Mix x and y with a prime
+	h ^= (h >> 16);      // Bit mixing
+	h *= 0x85ebca6b;
+	h ^= (h >> 13);
+	h *= 0xc2b2ae35;
+	h ^= (h >> 16);
+	return h;
 }
