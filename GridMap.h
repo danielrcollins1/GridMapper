@@ -68,8 +68,6 @@ class GridMap {
 		int getHeightCells();
 		int getWidthPixels();
 		int getHeightPixels();
-		int getCellSizePixels();
-		int getCellSizeDefault();
 		int getCellFloor(int x, int y);
 		int getCellNWall(int x, int y);
 		int getCellWWall(int x, int y);
@@ -81,7 +79,6 @@ class GridMap {
 		char* getFilename();
 
 		// Mutators
-		void setCellSizePixels(int cellSize);
 		void setCellFloor(int x, int y, int floor);
 		void setCellNWall(int x, int y, int wall);
 		void setCellWWall(int x, int y, int wall);
@@ -90,26 +87,35 @@ class GridMap {
 		void setFilename(char *name);
 
 		// Paint on a display context
-		void paint(HDC hDC, bool showGrid);
-		void paintCell(HDC hDC, int x, int y, bool allWalls, bool showGrid);
+		void paint(HDC hDC);
+		void paintCell(HDC hDC, int x, int y, bool allWalls);
 
 		// Save to file
 		int save();
+
+		// Display settings
+		static int getCellSizeMin();
+		static int getCellSizeMax();
+		static int getCellSizeDefault();
+		int getCellSizePixels() const;
+		bool displayRoughEdges() const;
+		bool displayNoGrid() const;
+		void setCellSizePixels(int cellSize);
+		void toggleRoughEdges();
+		void toggleNoGrid();
 
 	protected:
 
 		// Painting helper functions
 		void paintCellFloor(HDC hDC, int xPos, int yPos, GridCell cell);
 		void paintCellObject(HDC hDC, int xPos, int yPos, GridCell cell);
-		void paintCellNWall(
-		    HDC hDC, int xPos, int yPos, GridCell cell, bool showGrid);
-		void paintCellWWall(
-		    HDC hDC, int xPos, int yPos, GridCell cell, bool showGrid);
+		void paintCellNWall(HDC hDC, int xPos, int yPos, GridCell cell);
+		void paintCellWWall(HDC hDC, int xPos, int yPos, GridCell cell);
 		void LetterS(HDC hDC, int x, int y);
 
 	private:
 		GridCell **grid;
-		int width, height, cellSize;
+		unsigned int width, height, displayCode;
 		char filename[GRID_FILENAME_MAX];
 		bool changed, fileLoadOk;
 };

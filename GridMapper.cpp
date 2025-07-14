@@ -10,6 +10,7 @@
 #include "GridMapper.h"
 #include "Resource.h"
 #include <sstream>
+#include <cassert>
 #include <ctime>
 
 // Constants
@@ -17,7 +18,6 @@ const int MAX_LOADSTRING = 100;
 const int DefaultMapWidth = 40;
 const int DefaultMapHeight = 30;
 const int DefaultPrintSquaresPerInch = 4;
-const int MinimumGridSize = 12;
 const int ScrollWheelIncrement = 120;
 const char DefaultFileExt[] = "gmap";
 const char FileFilterStr[] = "GridMapper Files (*.gmap)\0*.gmap\0";
@@ -32,8 +32,6 @@ TCHAR szWindowClass[MAX_LOADSTRING];
 GridMap *gridmap = NULL;
 int selectedFeature = 0;
 bool LButtonCapture = false;
-bool ShowGridLines = true;
-bool DrawRoughEdges = false;
 char cmdLine[GRID_FILENAME_MAX] = "\0";
 
 // Function prototypes
@@ -49,10 +47,11 @@ void DestroyObjects();
 	Initialize strings, instance, accelerators.
 	Run main message loop here.
 */
-int APIENTRY WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPSTR     lpCmdLine,
-                     int       nCmdShow)
+int APIENTRY WinMain(
+    HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPSTR     lpCmdLine,
+    int       nCmdShow)
 {
 	MSG msg;
 	HACCEL hAccelTable;
@@ -135,8 +134,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	// Application startup
 	srand((unsigned int) time(NULL));
 	BkgdPen = CreatePen(PS_SOLID, 1, 0x00808080);
-	SetSelectedFeature(hWnd, IDM_FLOOR_OPEN);
-	CheckMenuItem(GetMenu(hWnd), IDM_SHOW_GRID, MF_BYCOMMAND | MF_CHECKED);
 	if (!strlen(cmdLine) || !NewMapFromFile(hWnd, cmdLine)) {
 		NewMapFromSpecs(hWnd, DefaultMapWidth, DefaultMapHeight);
 	}
@@ -146,7 +143,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 /*
 	Processes messages for the main window.
 */
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WndProc(
+    HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) {
 		case WM_PAINT:
@@ -251,7 +249,7 @@ bool CommandProc(HWND hWnd, int cmdId)
 		case IDM_ABOUT:
 			DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
 			break;
-		case IDM_SHOW_GRID:
+		case IDM_HIDE_GRID:
 			ToggleGridLines(hWnd);
 			break;
 		default:
@@ -282,7 +280,7 @@ int GetGridSize()
 
 void UpdateBkgdCell(HWND hWnd, int x, int y)
 {
-	gridmap->paintCell(BkgdDC, x, y, true, ShowGridLines);
+	gridmap->paintCell(BkgdDC, x, y, true);
 	UpdateEntireWindow(hWnd);
 }
 
@@ -406,9 +404,8 @@ void ScrollWheelHandler(HWND hWnd, WPARAM wParam)
 	// Handle zoom-in or out (Ctrl pressed)
 	if (wParam & MK_CONTROL) {
 		int newSize = GetGridSize() + steps;
-		if (newSize < MinimumGridSize) {
-			newSize = MinimumGridSize;
-		}
+		newSize = std::min(newSize, gridmap->getCellSizeMax());
+		newSize = std::max(newSize, gridmap->getCellSizeMin());
 		ChangeGridSize(hWnd, newSize);
 	}
 
@@ -627,17 +624,18 @@ void ChangeNorthWall(HWND hWnd, int x, int y, int newFeature)
 void ClearMap(HWND hWnd, bool open)
 {
 	gridmap->clearMap(open ? FLOOR_OPEN : FLOOR_FILL);
-	gridmap->paint(BkgdDC, ShowGridLines);
+	gridmap->paint(BkgdDC);
 	UpdateEntireWindow(hWnd);
 	SetSelectedFeature(hWnd, open ? IDM_FLOOR_FILL : IDM_FLOOR_OPEN);
 }
 
 void ToggleGridLines(HWND hWnd)
 {
-	ShowGridLines = !ShowGridLines;
+	gridmap->toggleNoGrid();
+	bool hideGrid = gridmap->displayNoGrid();
 	CheckMenuItem(
-	    GetMenu(hWnd), IDM_SHOW_GRID,
-	    MF_BYCOMMAND | (ShowGridLines ? MF_CHECKED : MF_UNCHECKED));
+	    GetMenu(hWnd), IDM_HIDE_GRID,
+	    MF_BYCOMMAND | (hideGrid ? MF_CHECKED : MF_UNCHECKED));
 	SetBkgdDC(hWnd);
 	UpdateEntireWindow(hWnd);
 }
@@ -667,15 +665,15 @@ void FillCell(HWND hWnd, int x, int y)
 		gridmap->setCellNWall(x, y+1, WALL_OPEN);
 
 	// Repaint elements
-	gridmap->paintCell(BkgdDC, x, y, true, ShowGridLines);
+	gridmap->paintCell(BkgdDC, x, y, true);
 	if (x-1 >= 0)
-		gridmap->paintCell(BkgdDC, x-1, y, true, ShowGridLines);
+		gridmap->paintCell(BkgdDC, x-1, y, true);
 	if (y-1 >= 0)
-		gridmap->paintCell(BkgdDC, x, y-1, true, ShowGridLines);
+		gridmap->paintCell(BkgdDC, x, y-1, true);
 	if (x+1 < width)
-		gridmap->paintCell(BkgdDC, x+1, y, true, ShowGridLines);
+		gridmap->paintCell(BkgdDC, x+1, y, true);
 	if (y+1 < height)
-		gridmap->paintCell(BkgdDC, x, y+1, true, ShowGridLines);
+		gridmap->paintCell(BkgdDC, x, y+1, true);
 	UpdateEntireWindow(hWnd);
 }
 
@@ -791,7 +789,7 @@ void SetBkgdDC(HWND hWnd)
 	        gridmap->getHeightPixels());
 	if (BkgdBitmap) {
 		SelectObject(BkgdDC, BkgdBitmap);
-		gridmap->paint(BkgdDC, ShowGridLines);
+		gridmap->paint(BkgdDC);
 	}
 	else {
 		MessageBox(
@@ -813,9 +811,12 @@ void SetNewMap(HWND hWnd, GridMap *newmap)
 {
 	delete gridmap;
 	gridmap = newmap;
+	HMENU menu = GetMenu(hWnd);
 	SetBkgdDC(hWnd);
 	SetScrollRange(hWnd, true);
 	SetSelectedFeature(hWnd, IDM_FLOOR_OPEN);
+	CheckMenuItem(menu, IDM_HIDE_GRID, MF_BYCOMMAND | MF_UNCHECKED);
+	CheckMenuItem(menu, IDM_ROUGH_EDGES, MF_BYCOMMAND | MF_UNCHECKED);
 	UpdateEntireWindow(hWnd);
 }
 
@@ -986,8 +987,8 @@ void PrintMap(HWND hWnd)
 //-----------------------------------------------------------------------------
 
 // "New" dialog box.message handler
-LRESULT CALLBACK NewDialog(HWND hDlg, UINT message,
-                           WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK NewDialog(
+    HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) {
 
@@ -1017,8 +1018,8 @@ LRESULT CALLBACK NewDialog(HWND hDlg, UINT message,
 
 
 // "Set Grid Size" dialog box.message handler
-LRESULT CALLBACK GridSizeDialog(HWND hDlg, UINT message,
-                                WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK GridSizeDialog(
+    HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) {
 
@@ -1036,21 +1037,31 @@ LRESULT CALLBACK GridSizeDialog(HWND hDlg, UINT message,
 				        hDlg, IDC_PXLS_PER_SQUARE, NULL,
 				        FALSE);
 
-				// Check minimum size
-				if (newSize < MinimumGridSize) {
+				// Check size too small
+				if (newSize < gridmap->getCellSizeMin()) {
 					std::stringstream message;
 					message << "Minimum grid size is "
-					        << MinimumGridSize << " pixels per square.";
+					        << gridmap->getCellSizeMin() 
+							<< " pixels per square.";
 					MessageBox(
 					    hDlg, message.str().c_str(),
 					    "Size Too Small", MB_OK|MB_ICONWARNING);
 				}
+				
+				// Check size too large
+				else if (newSize > gridmap->getCellSizeMax()) {
+					std::stringstream message;
+					message << "Maximum grid size is "
+					        << gridmap->getCellSizeMax() 
+							<< " pixels per square.";
+					MessageBox(
+					    hDlg, message.str().c_str(),
+					    "Size Too Large", MB_OK|MB_ICONWARNING);
+				}
+				
+				// Handle acceptable size
 				else {
-
-					// Check for actual change
-					if (newSize != gridmap->getCellSizePixels()) {
-						ChangeGridSize(GetWindow(hDlg, GW_OWNER), newSize);
-					}
+					ChangeGridSize(GetWindow(hDlg, GW_OWNER), newSize);
 					EndDialog(hDlg, LOWORD(wParam));
 				}
 				return TRUE;

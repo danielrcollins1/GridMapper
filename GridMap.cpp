@@ -10,12 +10,12 @@
 #include "GridMap.h"
 #include <stdio.h>
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 using std::min;
 using std::max;
 
 // Constants
-const int DEFAULT_CELL_SIZE = 20;
 const float TAU = 6.283185307f;
 const float SQRT2_2 = 0.70710678f;
 
@@ -31,6 +31,81 @@ bool IsFloorFillType(FloorType floor)
 }
 
 //------------------------------------------------------------------
+// Display code handlers
+//------------------------------------------------------------------
+
+/*
+	Field displayCode (unsigned int) used thus:
+	- Bits 0-9: Cell size in pixels (so, max 1023)
+	- Bits 10-29: Reserved
+	- Bit 30: Rough edges
+	- Bit 31: Hide grid
+*/
+
+// Constant bitmasks
+const unsigned int MASK_CELL_SIZE = (1u << 10) - 1;
+const unsigned int MASK_ROUGH_EDGES = 1u << 30;
+const unsigned int MASK_HIDE_GRID = 1u << 31;
+
+// Get cell size minimum
+int GridMap::getCellSizeMin()
+{
+	return 12;
+}
+
+// Get cell size default
+int GridMap::getCellSizeDefault()
+{
+	return 20;
+}
+
+// Get cell size maximum
+int GridMap::getCellSizeMax()
+{
+	return (int) MASK_CELL_SIZE;
+}
+
+// Get current cell size
+int GridMap::getCellSizePixels() const
+{
+	return (int)(displayCode & MASK_CELL_SIZE);
+}
+
+// Set current cell size
+void GridMap::setCellSizePixels(int cellSize)
+{
+	assert(cellSize >= getCellSizeMin());
+	assert(cellSize <= getCellSizeMax());
+	displayCode = (displayCode & ~MASK_CELL_SIZE)
+	              | (cellSize & MASK_CELL_SIZE);
+}
+
+// Do we want to see rough edges?
+bool GridMap::displayRoughEdges() const
+{
+	return (bool)(displayCode & MASK_ROUGH_EDGES);
+}
+
+// Toggle the rough edges display
+void GridMap::toggleRoughEdges() 
+{
+	displayCode ^= MASK_ROUGH_EDGES;	
+}
+
+
+// Do we want to hide grid lines?
+bool GridMap::displayNoGrid() const
+{
+	return (bool)(displayCode & MASK_HIDE_GRID);
+}
+
+// Toggle the hidden grid lines display
+void GridMap::toggleNoGrid()
+{
+	displayCode ^= MASK_HIDE_GRID;
+}
+
+//------------------------------------------------------------------
 // Constructor/ Destructors
 //------------------------------------------------------------------
 
@@ -39,7 +114,7 @@ GridMap::GridMap(int _width, int _height)
 {
 	width = _width;
 	height = _height;
-	cellSize = DEFAULT_CELL_SIZE;
+	setCellSizePixels(getCellSizeDefault());
 	grid = new GridCell*[width];
 	for (int x = 0; x < width; x++)
 		grid[x] = new GridCell[height];
@@ -82,7 +157,7 @@ GridMap::GridMap(char *_filename)
 	}
 
 	// Read & create other stuff
-	fread(&cellSize, sizeof(int), 1, f);
+	fread(&displayCode, sizeof(int), 1, f);
 	fread(&width, sizeof(int), 1, f);
 	fread(&height, sizeof(int), 1, f);
 	grid = new GridCell*[width];
@@ -102,7 +177,8 @@ GridMap::GridMap(char *_filename)
 
 fail:
 	grid = NULL;
-	width = height = cellSize = 0;
+	width = height = 0;
+	setCellSizePixels(0);
 	filename[0] = '\0';
 	fileLoadOk = false;
 }
@@ -119,7 +195,7 @@ int GridMap::save()
 	// Save stuff
 	char header[] = "GM\1\0";
 	fwrite(header, sizeof(char), 4, f);
-	fwrite(&cellSize, sizeof(int), 1, f);
+	fwrite(&displayCode, sizeof(int), 1, f);
 	fwrite(&width, sizeof(int), 1, f);
 	fwrite(&height, sizeof(int), 1, f);
 	for (int x = 0; x < width; x++) {
@@ -148,22 +224,12 @@ int GridMap::getHeightCells()
 
 int GridMap::getWidthPixels()
 {
-	return width * cellSize;
+	return width * getCellSizePixels();
 }
 
 int GridMap::getHeightPixels()
 {
-	return height * cellSize;
-}
-
-int GridMap::getCellSizePixels()
-{
-	return cellSize;
-}
-
-int GridMap::getCellSizeDefault()
-{
-	return DEFAULT_CELL_SIZE;
+	return height * getCellSizePixels();
 }
 
 int GridMap::getCellFloor(int x, int y)
@@ -253,11 +319,6 @@ bool GridMap::canBuildWWall(int x, int y)
 // Mutators
 //------------------------------------------------------------------
 
-void GridMap::setCellSizePixels(int _cellSize)
-{
-	cellSize = _cellSize;
-}
-
 void GridMap::setCellFloor(int x, int y, int floor)
 {
 	grid[x][y].floor = floor;
@@ -310,7 +371,7 @@ HPEN ThinGrayPen = NULL;
 HPEN ThickBlackPen = NULL;
 
 // Paint entire map on device context
-void GridMap::paint(HDC hDC, bool showGrid)
+void GridMap::paint(HDC hDC)
 {
 	// Create pens if needed
 	if (!ThickBlackPen) {
@@ -323,29 +384,30 @@ void GridMap::paint(HDC hDC, bool showGrid)
 	// Draw each grid cell
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
-			paintCell(hDC, x, y, false, showGrid);
+			paintCell(hDC, x, y, false);
 		}
 	}
 }
 
 // Paint one cell on device context
-void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls, bool showGrid)
+void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
 {
 	// Paint everything controlled by this cell
+	int cellSize = getCellSizePixels();
 	int xPos = x * cellSize;
 	int yPos = y * cellSize;
 	paintCellFloor(hDC, xPos, yPos, grid[x][y]);
 	paintCellObject(hDC, xPos, yPos, grid[x][y]);
-	paintCellNWall(hDC, xPos, yPos, grid[x][y], showGrid);
-	paintCellWWall(hDC, xPos, yPos, grid[x][y], showGrid);
+	paintCellNWall(hDC, xPos, yPos, grid[x][y]);
+	paintCellWWall(hDC, xPos, yPos, grid[x][y]);
 
 	// Paint other adjacent walls if requested (partial repaint)
 	if (allWalls) {
 		if (x+1 < width) {
-			paintCellWWall(hDC, xPos + cellSize, yPos, grid[x+1][y], showGrid);
+			paintCellWWall(hDC, xPos + cellSize, yPos, grid[x+1][y]);
 		}
 		if (y+1 < height) {
-			paintCellNWall(hDC, xPos, yPos + cellSize, grid[x][y+1], showGrid);
+			paintCellNWall(hDC, xPos, yPos + cellSize, grid[x][y+1]);
 		}
 	}
 }
@@ -353,6 +415,8 @@ void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls, bool showGrid)
 // Paint one cell's floor
 void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 {
+	int cellSize = getCellSizePixels();
+
 	// Paint floor depending on filled or not
 	if (cell.floor == FLOOR_FILL) {
 		SelectObject(hDC, GetStockObject(BLACK_PEN));
@@ -530,16 +594,17 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 }
 
 // Paint one cell's north wall
-void GridMap::paintCellNWall(
-    HDC hDC, int x, int y, GridCell cell, bool showGrid)
+void GridMap::paintCellNWall(HDC hDC, int x, int y, GridCell cell)
 {
+	int cellSize = getCellSizePixels();
+
 	// Paint grid line as needed
 	if (cell.nwall) {
 		SelectObject(hDC, ThickBlackPen);
 		MoveToEx(hDC, x, y, NULL);
 		LineTo(hDC, x + cellSize, y);
 	}
-	else if (showGrid) {
+	else if (!displayNoGrid()) {
 		SelectObject(hDC, ThinGrayPen);
 		MoveToEx(hDC, x, y, NULL);
 		LineTo(hDC, x + cellSize, y);
@@ -568,16 +633,17 @@ void GridMap::paintCellNWall(
 }
 
 // Paint one cell's west wall
-void GridMap::paintCellWWall(
-    HDC hDC, int x, int y, GridCell cell, bool showGrid)
+void GridMap::paintCellWWall(HDC hDC, int x, int y, GridCell cell)
 {
+	int cellSize = getCellSizePixels();
+
 	// Paint grid line as needed
 	if (cell.wwall) {
 		SelectObject(hDC, ThickBlackPen);
 		MoveToEx(hDC, x, y, NULL);
 		LineTo(hDC, x, y + cellSize);
 	}
-	else if (showGrid) {
+	else if (!displayNoGrid()) {
 		SelectObject(hDC, ThinGrayPen);
 		MoveToEx(hDC, x, y, NULL);
 		LineTo(hDC, x, y + cellSize);
@@ -612,7 +678,7 @@ void GridMap::paintCellWWall(
 */
 void GridMap::LetterS(HDC hDC, int x, int y)
 {
-	int fontHeight = (int)(cellSize * 0.70);
+	int fontHeight = (int)(getCellSizePixels() * 0.70);
 
 	// Create a font with desired height
 	HFONT hFont =
@@ -644,6 +710,7 @@ void GridMap::LetterS(HDC hDC, int x, int y)
 // Paint one cell's object
 void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 {
+	int cellSize = getCellSizePixels();
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 
 	// Pillar object (black circle)
