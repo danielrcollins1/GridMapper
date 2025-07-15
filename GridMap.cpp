@@ -990,6 +990,7 @@ void GridMap::generateFractalCurveRecursive(
 // Draw a quadrant of a filled square, with fractal edge
 void GridMap::drawFillQuadrantFractal(HDC hDC, int x, int y, Direction dir)
 {
+	// Get dimensions
 	int cellSize = getCellSizePixels();
 	POINT center = { x + cellSize / 2, y + cellSize / 2 };
 
@@ -1001,7 +1002,8 @@ void GridMap::drawFillQuadrantFractal(HDC hDC, int x, int y, Direction dir)
 	std::vector<POINT> shape;
 	shape.push_back(a);
 	generateFractalCurveRecursive(
-	    shape, a.x, a.y, b.x, b.y, cellSize * 0.33, 5);
+	    shape, a.x, a.y, b.x, b.y, 
+		cellSize * DISPLACEMENT_SCALE, RECURSION_LIMIT);
 	shape.push_back(center);
 	shape.push_back(a);
 
@@ -1070,10 +1072,9 @@ void GridMap::drawDiagonalFillFractal(
     HDC hDC, int x, int y, FloorType floor)
 {
 	assert(IsFloorDiagonalFill(floor));
-	int cellSize = getCellSizePixels();
 
-	// Declarations
-	std::vector<POINT> shape;
+	// Get dimensions
+	int cellSize = getCellSizePixels();
 
 	// Set diagonal endpoints
 	POINT start, end;
@@ -1104,9 +1105,11 @@ void GridMap::drawDiagonalFillFractal(
 	}
 
 	// Construct the closed shape
+	std::vector<POINT> shape;
 	shape.push_back(start);
 	generateFractalCurveRecursive(
-	    shape, start.x, start.y, end.x, end.y, cellSize * 0.33, 5);
+	    shape, start.x, start.y, end.x, end.y, 
+		cellSize * DISPLACEMENT_SCALE, RECURSION_LIMIT);
 	shape.push_back(extraVertex);
 	shape.push_back(start);
 

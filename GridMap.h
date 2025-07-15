@@ -146,5 +146,9 @@ class GridMap {
 		char filename[GRID_FILENAME_MAX];
 		bool changed, fileLoadOk;
 		HPEN ThinGrayPen = NULL, ThickBlackPen = NULL;
+		
+		// Constants for fractal edges
+		const int RECURSION_LIMIT = 4;
+		const double DISPLACEMENT_SCALE = 0.25;
 };
 #endif
