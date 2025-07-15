@@ -208,7 +208,7 @@ bool CommandProc(HWND hWnd, int cmdId)
 	}
 
 	// Catch feature-to-draw Tool selections
-	if (IDM_FLOOR_FILL <= cmdId && cmdId <= IDM_END_TOOLS_LIST) {
+	if (START_BASIC_FLOOR_TOOLS <= cmdId && cmdId <= END_OBJECT_TOOLS) {
 		SetSelectedFeature(hWnd, cmdId);
 		return true;
 	}
@@ -779,11 +779,27 @@ ObjectType GetObjectTypeFromMenu(int menuID)
 // Menu actions
 //-----------------------------------------------------------------------------
 
+// Set & clear radio buttons in tools menu & submenus
 void SetSelectedFeature(HWND hWnd, int feature)
 {
 	selectedFeature = feature;
+	HMENU hMenu = GetMenu(hWnd);
+
+	// Main menu
 	CheckMenuRadioItem(
-	    GetMenu(hWnd), IDM_FLOOR_FILL, IDM_END_TOOLS_LIST,
+	    hMenu, START_BASIC_FLOOR_TOOLS, END_BASIC_WALL_TOOLS,
+	    feature, MF_BYCOMMAND);
+
+	// Diagonals submenu
+	HMENU hDiagMenu = GetSubMenu(GetSubMenu(hMenu, 1), 13);
+	CheckMenuRadioItem(
+	    hDiagMenu, START_DIAGONAL_TOOLS, END_DIAGONAL_TOOLS,
+	    feature, MF_BYCOMMAND);
+
+	// Objects submenu
+	HMENU hObjectsMenu = GetSubMenu(GetSubMenu(hMenu, 1), 14);
+	CheckMenuRadioItem(
+	    hObjectsMenu, START_OBJECT_TOOLS, END_OBJECT_TOOLS,
 	    feature, MF_BYCOMMAND);
 }
 
@@ -836,10 +852,10 @@ void SetNewMap(HWND hWnd, GridMap *newmap)
 	SetBkgdDC(hWnd);
 	SetScrollRange(hWnd, true);
 	SetSelectedFeature(hWnd, IDM_FLOOR_OPEN);
-	CheckMenuItem(GetMenu(hWnd), IDM_HIDE_GRID, MF_BYCOMMAND | 
-		(gridmap->displayNoGrid() ? MF_CHECKED : MF_UNCHECKED));
-	CheckMenuItem(GetMenu(hWnd), IDM_ROUGH_EDGES, MF_BYCOMMAND | 
-		(gridmap->displayRoughEdges() ? MF_CHECKED : MF_UNCHECKED));
+	CheckMenuItem(GetMenu(hWnd), IDM_HIDE_GRID, MF_BYCOMMAND |
+	              (gridmap->displayNoGrid() ? MF_CHECKED : MF_UNCHECKED));
+	CheckMenuItem(GetMenu(hWnd), IDM_ROUGH_EDGES, MF_BYCOMMAND |
+	              (gridmap->displayRoughEdges() ? MF_CHECKED : MF_UNCHECKED));
 	UpdateEntireWindow(hWnd);
 }
 

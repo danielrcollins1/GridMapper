@@ -65,22 +65,30 @@ BEGIN
         MENUITEM "Secret Door",                 IDM_WALL_SECRET_DOOR
         MENUITEM "Clear Wall",                  IDM_WALL_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "Statue Object",               IDM_OBJECT_STATUE
-        MENUITEM "Pillar Object",               IDM_OBJECT_PILLAR
-        MENUITEM "Trapdoor Object",             IDM_OBJECT_TRAPDOOR
-        MENUITEM "Pit Object",                  IDM_OBJECT_PIT
-        MENUITEM "Rubble Object",               IDM_OBJECT_RUBBLE
-        MENUITEM "Clear Object",                IDM_OBJECT_CLEAR
-        MENUITEM SEPARATOR
-        MENUITEM "Diagonal Fill NE",            IDM_FLOOR_NEFILL
-        MENUITEM "Diagonal Fill SW",            IDM_FLOOR_SWFILL
-        MENUITEM "Diagonal Fill NW",            IDM_FLOOR_NWFILL
-        MENUITEM "Diagonal Fill SE",            IDM_FLOOR_SEFILL
-        MENUITEM "Diagonal Wall NE/SW",         IDM_FLOOR_NEWALL
-        MENUITEM "Diagonal Wall NW/SE",         IDM_FLOOR_NWWALL
-        MENUITEM "Single Door NE/SW",           IDM_FLOOR_NEDOOR
-        MENUITEM "Single Door NW/SE",           IDM_FLOOR_NWDOOR
-        MENUITEM SEPARATOR
+        
+        POPUP "Diagonals"
+		BEGIN
+            MENUITEM "Fill NE",                     IDM_FLOOR_NEFILL
+            MENUITEM "Fill SW",                     IDM_FLOOR_SWFILL
+            MENUITEM "Fill NW",                     IDM_FLOOR_NWFILL
+            MENUITEM "Fill SE",                     IDM_FLOOR_SEFILL
+            MENUITEM "Wall NE/SW",                  IDM_FLOOR_NEWALL
+            MENUITEM "Wall NW/SE",                  IDM_FLOOR_NWWALL
+            MENUITEM "Door NE/SW",                  IDM_FLOOR_NEDOOR
+            MENUITEM "Door NW/SE",                  IDM_FLOOR_NWDOOR
+        END
+
+        POPUP "Objects"
+        BEGIN
+            MENUITEM "Statue",                      IDM_OBJECT_STATUE
+            MENUITEM "Pillar",                      IDM_OBJECT_PILLAR
+            MENUITEM "Trapdoor",                    IDM_OBJECT_TRAPDOOR
+            MENUITEM "Pit",                         IDM_OBJECT_PIT
+            MENUITEM "Rubble",                      IDM_OBJECT_RUBBLE
+            MENUITEM "Clear",                       IDM_OBJECT_CLEAR
+        END
+        
+		MENUITEM SEPARATOR
         MENUITEM "Fill Entire Map",             IDM_FILL_MAP
         MENUITEM "Clear Entire Map",            IDM_CLEAR_MAP
         MENUITEM "Hide Grid Lines",             IDM_HIDE_GRID
