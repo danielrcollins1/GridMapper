@@ -260,24 +260,24 @@ int GridMap::getHeightPixels()
 	return height * getCellSizePixels();
 }
 
-int GridMap::getCellFloor(int x, int y)
+FloorType GridMap::getCellFloor(int x, int y)
 {
-	return grid[x][y].floor;
+	return (FloorType) grid[x][y].floor;
 }
 
-int GridMap::getCellNWall(int x, int y)
+WallType GridMap::getCellNWall(int x, int y)
 {
-	return grid[x][y].nwall;
+	return (WallType) grid[x][y].nwall;
 }
 
-int GridMap::getCellWWall(int x, int y)
+WallType GridMap::getCellWWall(int x, int y)
 {
-	return grid[x][y].wwall;
+	return (WallType) grid[x][y].wwall;
 }
 
-int GridMap::getCellObject(int x, int y)
+ObjectType GridMap::getCellObject(int x, int y)
 {
-	return grid[x][y].object;
+	return (ObjectType) grid[x][y].object;
 }
 
 bool GridMap::isChanged()
@@ -424,9 +424,27 @@ void GridMap::paint(HDC hDC)
 	}
 }
 
-// Paint one cell on device context
-void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
+/*
+	Paint one cell on device context
+
+	NOTE ON RECURSION: 
+	This is recursive to handle rough edges bleeding into neighbor spaces.
+	This isn't perfect for partial repaints,
+	but we need some depth limit to avoid infinite recursion.
+	(E.g.: Draw a tight snaky tunnel trending north or west
+	and you'll see some artifacts.)
+	Also, the higher the limit, the slower it is to zoom in/out
+	on a mostly open map with rough edges.
+*/
+void GridMap::paintCell(
+    HDC hDC, int x, int y, bool partialRepaint, int depth)
 {
+	// Handle recursion limit for open redraws
+	if (depth > 1
+	        && IsFloorOpenType((FloorType) getCellFloor(x, y))) {
+		return;
+	}
+
 	// Seed randomizations for this cell
 	srand(cellHash(x, y));
 
@@ -439,8 +457,8 @@ void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
 	paintCellNWall(hDC, xPos, yPos, grid[x][y]);
 	paintCellWWall(hDC, xPos, yPos, grid[x][y]);
 
-	// Repaint walls east & south if requested
-	if (allWalls) {
+	// Repaint walls east & south if needed
+	if (partialRepaint) {
 		if (x+1 < width) {
 			paintCellWWall(hDC, xPos + cellSize, yPos, grid[x+1][y]);
 		}
@@ -449,14 +467,20 @@ void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
 		}
 	}
 
-	// Repaint west & north neighbors if rough-edged
+	// Repaint neighbors in case of bleeding rough edges
 	if (displayRoughEdges()
 	        && IsFloorOpenType((FloorType) getCellFloor(x, y))) {
-		if (x > 0 && getCellFloor(x - 1, y) == FLOOR_FILL) {
-			paintCell(hDC, x - 1, y, false);
+		if (x > 0) {
+			paintCell(hDC, x - 1, y, true, depth + 1);
 		}
-		if (y > 0 && getCellFloor(x, y - 1) == FLOOR_FILL) {
-			paintCell(hDC, x, y - 1, false);
+		if (y > 0) {
+			paintCell(hDC, x, y - 1, true, depth + 1);
+		}
+		if (x+1 < width) {
+			paintCell(hDC, x + 1, y, true, depth + 1);
+		}
+		if (y+1 < height) {
+			paintCell(hDC, x, y + 1, true, depth + 1);
 		}
 	}
 }
@@ -896,6 +920,31 @@ double GridMap::randomUnit() const
 	return 2.0 * rand() / RAND_MAX - 1.0;
 }
 
+// Find the two vertices of a space in a given direction
+void GridMap::getVertexPoints(
+    int x, int y, POINT& a, POINT& b, Direction dir)
+{
+	int cellSize = getCellSizePixels();
+	switch (dir) {
+		case NORTH:
+			a = { x, y };
+			b = { x + cellSize, y };
+			break;
+		case SOUTH:
+			a = { x + cellSize, y + cellSize };
+			b = { x, y + cellSize };
+			break;
+		case EAST:
+			a = { x + cellSize, y };
+			b = { x + cellSize, y + cellSize };
+			break;
+		case WEST:
+			a = { x, y + cellSize };
+			b = { x, y };
+			break;
+	}
+}
+
 // Generate a fractal line between two points
 void GridMap::generateFractalCurveRecursive(
     std::vector<POINT>& points,
@@ -909,9 +958,12 @@ void GridMap::generateFractalCurveRecursive(
 	double dy = y2 - y1;
 	double dist = sqrt(dx * dx + dy * dy);
 
+	// Base case
 	if (depthToGo == 0 || dist < 1.0) {
 		points.push_back({ x2, y2 });
 	}
+
+	// Recursive case
 	else {
 
 		// Midpoint
@@ -927,7 +979,7 @@ void GridMap::generateFractalCurveRecursive(
 		mx += perpX * offset;
 		my += perpY * offset;
 
-		// Recurse
+		// Recursive calls
 		generateFractalCurveRecursive(
 		    points, x1, y1, (int) mx, (int) my,
 		    displacement / 2.0, depthToGo - 1);
@@ -943,36 +995,17 @@ void GridMap::drawFillQuadrantFractal(HDC hDC, int x, int y, Direction dir)
 	int cellSize = getCellSizePixels();
 	POINT center = { x + cellSize / 2, y + cellSize / 2 };
 
-	// Two edge points based on direction
+	// Set outer vertices
 	POINT a, b;
-	switch (dir) {
-		case NORTH:
-			a = { x, y };
-			b = { x + cellSize, y };
-			break;
-		case SOUTH:
-			a = { x + cellSize, y + cellSize };
-			b = { x, y + cellSize };
-			break;
-		case EAST:
-			a = { x + cellSize, y };
-			b = { x + cellSize, y + cellSize };
-			break;
-		case WEST:
-			a = { x, y + cellSize };
-			b = { x, y };
-			break;
-	}
+	getVertexPoints(x, y, a, b, dir);
 
-	// Generate fractal curve from a to b
+	// Construct the closed shape
 	std::vector<POINT> shape;
 	shape.push_back(a);
 	generateFractalCurveRecursive(
 	    shape, a.x, a.y, b.x, b.y, cellSize * 0.33, 5);
-
-	// Add center point and close polygon
 	shape.push_back(center);
-	shape.push_back(a); // close back to start
+	shape.push_back(a);
 
 	// Fill polygon with black
 	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
@@ -985,28 +1018,11 @@ void GridMap::drawFillQuadrantSmooth(HDC hDC, int x, int y, Direction dir)
 	int cellSize = getCellSizePixels();
 	POINT center = { x + cellSize / 2, y + cellSize / 2 };
 
-	// Two adjacent corner points depending on direction
+	// Set outer vertices
 	POINT a, b;
-	switch (dir) {
-		case NORTH:
-			a = { x, y };
-			b = { x + cellSize, y };
-			break;
-		case SOUTH:
-			a = { x + cellSize, y + cellSize };
-			b = { x, y + cellSize };
-			break;
-		case EAST:
-			a = { x + cellSize, y };
-			b = { x + cellSize, y + cellSize };
-			break;
-		case WEST:
-			a = { x, y + cellSize };
-			b = { x, y };
-			break;
-	}
+	getVertexPoints(x, y, a, b, dir);
 
-	// Construct triangle: [a, b, center]
+	// Construct the triangle
 	POINT triangle[3] = { a, b, center };
 
 	// Fill with black
@@ -1036,7 +1052,7 @@ void GridMap::drawFillSpaceFractal(HDC hDC, int x, int y)
 	int gx = x / cellSize;
 	int gy = y / cellSize;
 
-	// Draw each quadrant, fractal edge if neighbor open
+	// Draw each quadrant, with fractal edge if neighbor open
 	drawFillQuadrant(
 	    hDC, x, y, WEST, gx > 1
 	    && IsFloorOpenType((FloorType) getCellFloor(gx - 1, gy)));
@@ -1059,43 +1075,42 @@ void GridMap::drawDiagonalFillFractal(
 	int cellSize = getCellSizePixels();
 
 	// Declarations
-	POINT start, end;
 	std::vector<POINT> shape;
 
-	// Choose diagonal
+	// Set diagonal endpoints
+	POINT start, end;
 	if (floor == FLOOR_NEFILL || floor == FLOOR_SWFILL) {
 		start = { x, y };
 		end   = { x + cellSize, y + cellSize };
 	}
-	else {  // NW or SE
+	else {
 		start = { x + cellSize, y };
 		end   = { x, y + cellSize };
 	}
 
-	// Generate fractal diagonal
-	shape.push_back(start);
-	generateFractalCurveRecursive(
-	    shape, start.x, start.y, end.x, end.y, cellSize * 0.33, 5);
-
-	// Build polygon to fill
-	POINT extraCorner;
+	// Set extra vertex
+	POINT extraVertex;
 	switch (floor) {
 		case FLOOR_NWFILL:
-			extraCorner = { x, y };
+			extraVertex = { x, y };
 			break;
 		case FLOOR_NEFILL:
-			extraCorner = { x + cellSize, y };
+			extraVertex = { x + cellSize, y };
 			break;
 		case FLOOR_SEFILL:
-			extraCorner = { x + cellSize, y + cellSize };
+			extraVertex = { x + cellSize, y + cellSize };
 			break;
 		case FLOOR_SWFILL:
-			extraCorner = { x, y + cellSize };
+			extraVertex = { x, y + cellSize };
 			break;
 	}
 
-	shape.push_back(extraCorner);
-	shape.push_back(shape.front());
+	// Construct the closed shape
+	shape.push_back(start);
+	generateFractalCurveRecursive(
+	    shape, start.x, start.y, end.x, end.y, cellSize * 0.33, 5);
+	shape.push_back(extraVertex);
+	shape.push_back(start);
 
 	// Fill polygon
 	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
@@ -1106,9 +1121,10 @@ void GridMap::drawDiagonalFillFractal(
 void GridMap::drawDiagonalFillSmooth(HDC hDC, int x, int y, FloorType floor)
 {
 	assert(IsFloorDiagonalFill(floor));
-	POINT triangle[3];
 	int cellSize = getCellSizePixels();
 
+	// Construct the triangle
+	POINT triangle[3];
 	switch (floor) {
 		case FLOOR_NWFILL:
 			triangle[0] = { x, y };
@@ -1132,6 +1148,7 @@ void GridMap::drawDiagonalFillSmooth(HDC hDC, int x, int y, FloorType floor)
 			break;
 	}
 
+	// Fill polygon
 	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
 	Polygon(hDC, triangle, 3);
 }

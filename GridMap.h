@@ -76,10 +76,10 @@ class GridMap {
 		int getHeightCells();
 		int getWidthPixels();
 		int getHeightPixels();
-		int getCellFloor(int x, int y);
-		int getCellNWall(int x, int y);
-		int getCellWWall(int x, int y);
-		int getCellObject(int x, int y);
+		FloorType getCellFloor(int x, int y);
+		WallType getCellNWall(int x, int y);
+		WallType getCellWWall(int x, int y);
+		ObjectType getCellObject(int x, int y);
 		bool canBuildNWall(int x, int y);
 		bool canBuildWWall(int x, int y);
 		bool isChanged();
@@ -96,7 +96,8 @@ class GridMap {
 
 		// Paint on a display context
 		void paint(HDC hDC);
-		void paintCell(HDC hDC, int x, int y, bool allWalls);
+		void paintCell(
+		    HDC hDC, int x, int y, bool partialRepaint, int depth = 0);
 
 		// Save to file
 		int save();
@@ -125,9 +126,11 @@ class GridMap {
 
 		// Rough-edge painting functions
 		double randomUnit() const;
+		void getVertexPoints(
+		    int x, int y, POINT& a, POINT& b, Direction dir);
 		void drawFillSpaceFractal(HDC hDC, int x, int y);
 		void drawFillQuadrant(
-			HDC hDC, int x, int y, Direction dir, bool fractal);
+		    HDC hDC, int x, int y, Direction dir, bool fractal);
 		void drawFillQuadrantSmooth(HDC hDC, int x, int y, Direction dir);
 		void drawFillQuadrantFractal(HDC hDC, int x, int y, Direction dir);
 		void drawDiagonalFillSmooth(HDC hDC, int x, int y, FloorType floor);
