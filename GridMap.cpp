@@ -372,10 +372,23 @@ void GridMap::clearMap(int _floor)
 //------------------------------------------------------------------
 
 // Make standard pens
-void GridMap::makeStandardPens() 
+void GridMap::makeStandardPens()
 {
 	ThinGrayPen = CreatePen(PS_SOLID, 1, 0x00808080);
 	ThickBlackPen = CreatePen(PS_SOLID, 3, 0x00000000);
+}
+
+// Hash a coordinate (for use as random seed)
+unsigned GridMap::cellHash(int x, int y) const
+{
+	unsigned int h = x;
+	h = h * 31 + y;      // Mix x and y with a prime
+	h ^= (h >> 16);      // Bit mixing
+	h *= 0x85ebca6b;
+	h ^= (h >> 13);
+	h *= 0xc2b2ae35;
+	h ^= (h >> 16);
+	return h;
 }
 
 // Paint entire map on device context
@@ -403,7 +416,7 @@ void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
 	paintCellNWall(hDC, xPos, yPos, grid[x][y]);
 	paintCellWWall(hDC, xPos, yPos, grid[x][y]);
 
-	// Paint other adjacent walls if requested (partial repaint)
+	// Paint walls east & south if requested (partial repaint)
 	if (allWalls) {
 		if (x+1 < width) {
 			paintCellWWall(hDC, xPos + cellSize, yPos, grid[x+1][y]);
@@ -419,37 +432,29 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 {
 	int cellSize = getCellSizePixels();
 
-	// Paint floor depending on filled or not
-	if (cell.floor == FLOOR_FILL) {
+	// If we're a filled cell with no rough edges,
+	// then simply paint a black rectangle and return
+	if (cell.floor == FLOOR_FILL && !displayRoughEdges()) {
 		SelectObject(hDC, GetStockObject(BLACK_PEN));
 		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-	}
-	else {
-		SelectObject(hDC, GetStockObject(WHITE_PEN));
-		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
-	}
-
-	// Testing rough edge on north
-	if (displayRoughEdges() && cell.floor == FLOOR_FILL && y > 0
-	        && grid[x/cellSize][y/cellSize - 1].floor == FLOOR_OPEN) {
-
-		// Draw ground white
-		SelectObject(hDC, GetStockObject(WHITE_PEN));
-		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
 		Rectangle(hDC, x, y, x + cellSize, y + cellSize);
+		return;
+	}
 
-		// Draw the black fractal cap
-		SelectObject(hDC, GetStockObject(BLACK_PEN));
-		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-		drawFractalCapAndFill(hDC, x, y);
-	}
-	else {
-		Rectangle(hDC, x, y, x + cellSize, y + cellSize);
-	}
-//	Rectangle(hDC, x, y, x + cellSize, y + cellSize);
+	// Paint a white rectangle as background
+	SelectObject(hDC, GetStockObject(WHITE_PEN));
+	SelectObject(hDC, GetStockObject(WHITE_BRUSH));
+	Rectangle(hDC, x, y, x + cellSize, y + cellSize);
 
 	// Set pen for other features
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
+
+	// Testing rough edge on north
+//	if (displayRoughEdges() && cell.floor == FLOOR_FILL && y > 0
+//	        && grid[x/cellSize][y/cellSize - 1].floor == FLOOR_OPEN) {
+//		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+//		drawFractalCapAndFill(hDC, x, y);
+//	}
 
 	// Stairs (series of parallel lines)
 	if (cell.floor == FLOOR_NSTAIRS || cell.floor == FLOOR_WSTAIRS) {
@@ -504,34 +509,12 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 
 	// Diagonal half-filled space
 	if (FLOOR_NWFILL <= cell.floor && cell.floor <= FLOOR_SEFILL) {
-
-		POINT triangle[3];
-
-		switch (cell.floor) {
-			case FLOOR_NWFILL:
-				triangle[0] = { x, y };
-				triangle[1] = { x + cellSize, y };
-				triangle[2] = { x, y + cellSize };
-				break;
-			case FLOOR_NEFILL:
-				triangle[0] = { x + cellSize, y };
-				triangle[1] = { x + cellSize, y + cellSize };
-				triangle[2] = { x, y };
-				break;
-			case FLOOR_SWFILL:
-				triangle[0] = { x, y + cellSize };
-				triangle[1] = { x, y };
-				triangle[2] = { x + cellSize, y + cellSize };
-				break;
-			case FLOOR_SEFILL:
-				triangle[0] = { x + cellSize, y + cellSize };
-				triangle[1] = { x, y + cellSize };
-				triangle[2] = { x + cellSize, y };
-				break;
+		if (displayRoughEdges()) {
+			drawFractalDiagonalFill(hDC, x, y, (FloorType) cell.floor);
 		}
-
-		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-		Polygon(hDC, triangle, 3);
+		else {
+			drawDiagonalFill(hDC, x, y, (FloorType) cell.floor);
+		}
 	}
 
 	// Spiral stairs (arc, circle, and spokes)
@@ -892,7 +875,7 @@ void GridMap::generateFractalCurveRecursive(
 	else {
 		int mx = (x1 + x2) / 2;
 		int my = (y1 + y2) / 2;
-		my += static_cast<int>(displacement * randomUnit());
+		my += (int)(displacement * randomUnit());
 		generateFractalCurveRecursive(
 		    points, x1, y1, mx, my, displacement / 2.0, depthToGo - 1);
 		generateFractalCurveRecursive(
@@ -919,8 +902,8 @@ void GridMap::drawFractalCapAndFill(HDC hDC, int x, int y)
 {
 	// Create the fractal curve along the top
 	int cellSize = getCellSizePixels();
-	std::vector<POINT> curve = 
-		generateFractalCurveWithNoise(x, y, cellSize);
+	std::vector<POINT> curve =
+	    generateFractalCurveWithNoise(x, y, cellSize);
 
 	// Add center point to form a filled polygon
 	POINT center = { x + cellSize / 2, y + cellSize / 2 };
@@ -931,18 +914,123 @@ void GridMap::drawFractalCapAndFill(HDC hDC, int x, int y)
 
 	// Fill with black
 	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-	Polygon(hDC, curve.data(), static_cast<int>(curve.size()));
+	Polygon(hDC, curve.data(), (int)(curve.size()));
 }
 
-// Hash a coordinate (for use as random seed)
-unsigned GridMap::cellHash(int x, int y) const
+// Draw a fractal line on a diagonal
+void GridMap::generateFractalDiagonalRecursive(
+    std::vector<POINT>& points,
+    int x1, int y1,
+    int x2, int y2,
+    double displacement,
+    int depthToGo)
 {
-	unsigned int h = x;
-	h = h * 31 + y;      // Mix x and y with a prime
-	h ^= (h >> 16);      // Bit mixing
-	h *= 0x85ebca6b;
-	h ^= (h >> 13);
-	h *= 0xc2b2ae35;
-	h ^= (h >> 16);
-	return h;
+	if (depthToGo == 0) {
+		points.push_back({ x2, y2 });
+	}
+	else {
+		int mx = (x1 + x2) / 2;
+		int my = (y1 + y2) / 2;
+
+		// Perpendicular displacement to the line
+		int dx = x2 - x1;
+		int dy = y2 - y1;
+		int perpX = -dy;
+		int perpY = dx;
+
+		double length = sqrt(perpX * perpX + perpY * perpY);
+		double offset = displacement * randomUnit();
+
+		mx += (int)((perpX / length) * offset);
+		my += (int)((perpY / length) * offset);
+
+		generateFractalDiagonalRecursive(
+		    points, x1, y1, mx, my, displacement / 2.0, depthToGo - 1);
+		generateFractalDiagonalRecursive(
+		    points, mx, my, x2, y2, displacement / 2.0, depthToGo - 1);
+	}
+}
+
+// Draw a diagonally filled space with rough edge
+void GridMap::drawFractalDiagonalFill(
+    HDC hDC, int x, int y, FloorType floor)
+{
+	assert(FLOOR_NWFILL <= floor && floor <= FLOOR_SEFILL);
+	int cellSize = getCellSizePixels();
+
+	// Declarations
+	POINT start, end;
+	std::vector<POINT> fractal;
+
+	// Choose diagonal
+	if (floor == FLOOR_NEFILL || floor == FLOOR_SWFILL) {
+		start = { x, y };
+		end   = { x + cellSize, y + cellSize };
+	}
+	else {  // NW or SE
+		start = { x + cellSize, y };
+		end   = { x, y + cellSize };
+	}
+
+	// Generate fractal diagonal
+	fractal.push_back(start);
+	generateFractalDiagonalRecursive(
+	    fractal, start.x, start.y, end.x, end.y, cellSize * 0.33, 5);
+
+	// Build polygon to fill
+	POINT extraCorner;
+	switch (floor) {
+		case FLOOR_NWFILL:
+			extraCorner = { x, y };
+			break;
+		case FLOOR_NEFILL:
+			extraCorner = { x + cellSize, y };
+			break;
+		case FLOOR_SEFILL:
+			extraCorner = { x + cellSize, y + cellSize };
+			break;
+		case FLOOR_SWFILL:
+			extraCorner = { x, y + cellSize };
+			break;
+	}
+
+	fractal.push_back(extraCorner);
+	fractal.push_back(fractal.front());
+
+	// Fill polygon
+	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+	Polygon(hDC, fractal.data(), (int)(fractal.size()));
+}
+
+// Draw a diagonally filled space (with smooth edge)
+void GridMap::drawDiagonalFill(HDC hDC, int x, int y, FloorType floor)
+{
+	POINT triangle[3];
+	int cellSize = getCellSizePixels();
+
+	switch (floor) {
+		case FLOOR_NWFILL:
+			triangle[0] = { x, y };
+			triangle[1] = { x + cellSize, y };
+			triangle[2] = { x, y + cellSize };
+			break;
+		case FLOOR_NEFILL:
+			triangle[0] = { x + cellSize, y };
+			triangle[1] = { x + cellSize, y + cellSize };
+			triangle[2] = { x, y };
+			break;
+		case FLOOR_SWFILL:
+			triangle[0] = { x, y + cellSize };
+			triangle[1] = { x, y };
+			triangle[2] = { x + cellSize, y + cellSize };
+			break;
+		case FLOOR_SEFILL:
+			triangle[0] = { x + cellSize, y + cellSize };
+			triangle[1] = { x, y + cellSize };
+			triangle[2] = { x + cellSize, y };
+			break;
+	}
+
+	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+	Polygon(hDC, triangle, 3);
 }

@@ -125,6 +125,16 @@ class GridMap {
 		std::vector<POINT> generateFractalCurveWithNoise(
 		    int x, int y, int length);
 		void drawFractalCapAndFill(HDC hDC, int x, int y);
+		void generateFractalDiagonalRecursive(
+		    std::vector<POINT>& points,
+		    int x1, int y1,
+		    int x2, int y2,
+		    double displacement,
+		    int depthToGo);
+		void drawFractalDiagonalFill(
+		    HDC hDC, int x, int y, FloorType floor);
+		void drawDiagonalFill(
+		    HDC hDC, int x, int y, FloorType floor);
 
 	private:
 		GridCell **grid;
