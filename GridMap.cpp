@@ -439,13 +439,24 @@ void GridMap::paintCell(HDC hDC, int x, int y, bool allWalls)
 	paintCellNWall(hDC, xPos, yPos, grid[x][y]);
 	paintCellWWall(hDC, xPos, yPos, grid[x][y]);
 
-	// Paint walls east & south if requested (partial repaint)
+	// Repaint walls east & south if requested
 	if (allWalls) {
 		if (x+1 < width) {
 			paintCellWWall(hDC, xPos + cellSize, yPos, grid[x+1][y]);
 		}
 		if (y+1 < height) {
 			paintCellNWall(hDC, xPos, yPos + cellSize, grid[x][y+1]);
+		}
+	}
+
+	// Repaint west & north neighbors if rough-edged
+	if (displayRoughEdges()
+	        && IsFloorOpenType((FloorType) getCellFloor(x, y))) {
+		if (x > 0 && getCellFloor(x - 1, y) == FLOOR_FILL) {
+			paintCell(hDC, x - 1, y, false);
+		}
+		if (y > 0 && getCellFloor(x, y - 1) == FLOOR_FILL) {
+			paintCell(hDC, x, y - 1, false);
 		}
 	}
 }
