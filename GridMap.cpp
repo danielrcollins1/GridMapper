@@ -27,8 +27,31 @@ const float SQRT2_2 = 0.70710678f;
 // Is this floor type space-filling?
 bool IsFloorFillType(FloorType floor)
 {
-	return (floor == FLOOR_FILL
-	        || (FLOOR_NWFILL <= floor && floor <= FLOOR_SEFILL));
+	return floor == FLOOR_FILL || IsFloorDiagonalFill(floor);
+}
+
+// Is the floor type open all around?
+bool IsFloorOpenType(FloorType floor)
+{
+	switch (floor) {
+		case FLOOR_OPEN:
+		case FLOOR_NSTAIRS:
+		case FLOOR_WSTAIRS:
+		case FLOOR_NEWALL:
+		case FLOOR_NWWALL:
+		case FLOOR_NEDOOR:
+		case FLOOR_NWDOOR:
+		case FLOOR_SPIRALSTAIRS:
+		case FLOOR_WATER:
+			return true;
+	}
+	return false;
+}
+
+// Is this floor type one of the diagonal fills?
+bool IsFloorDiagonalFill(FloorType floor)
+{
+	return FLOOR_NWFILL <= floor && floor <= FLOOR_SEFILL;
 }
 
 //------------------------------------------------------------------
@@ -449,12 +472,11 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	// Set pen for other features
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 
-	// Testing rough edge on north
-//	if (displayRoughEdges() && cell.floor == FLOOR_FILL && y > 0
-//	        && grid[x/cellSize][y/cellSize - 1].floor == FLOOR_OPEN) {
-//		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-//		drawFractalCapAndFill(hDC, x, y);
-//	}
+	// Draw a filled space with rough edges
+	if (cell.floor == FLOOR_FILL) {
+		assert(displayRoughEdges());
+		drawFillSpaceFractal(hDC, x, y);
+	}
 
 	// Stairs (series of parallel lines)
 	if (cell.floor == FLOOR_NSTAIRS || cell.floor == FLOOR_WSTAIRS) {
@@ -508,12 +530,12 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	}
 
 	// Diagonal half-filled space
-	if (FLOOR_NWFILL <= cell.floor && cell.floor <= FLOOR_SEFILL) {
+	if (IsFloorDiagonalFill((FloorType) cell.floor)) {
 		if (displayRoughEdges()) {
-			drawFractalDiagonalFill(hDC, x, y, (FloorType) cell.floor);
+			drawDiagonalFillFractal(hDC, x, y, (FloorType) cell.floor);
 		}
 		else {
-			drawDiagonalFill(hDC, x, y, (FloorType) cell.floor);
+			drawDiagonalFillSmooth(hDC, x, y, (FloorType) cell.floor);
 		}
 	}
 
@@ -857,11 +879,13 @@ void GridMap::paintCellObject(HDC hDC, int x, int y, GridCell cell)
 	}
 }
 
+// Get a random float between -1 and +1
 double GridMap::randomUnit() const
 {
 	return 2.0 * rand() / RAND_MAX - 1.0;
 }
 
+// Generate a fractal line between two points
 void GridMap::generateFractalCurveRecursive(
     std::vector<POINT>& points,
     int x1, int y1,
@@ -869,98 +893,163 @@ void GridMap::generateFractalCurveRecursive(
     double displacement,
     int depthToGo)
 {
-	if (depthToGo == 0) {
+	// Compute distance
+	double dx = x2 - x1;
+	double dy = y2 - y1;
+	double dist = sqrt(dx * dx + dy * dy);
+
+	if (depthToGo == 0 || dist < 1.0) {
 		points.push_back({ x2, y2 });
 	}
 	else {
-		int mx = (x1 + x2) / 2;
-		int my = (y1 + y2) / 2;
-		my += (int)(displacement * randomUnit());
+
+		// Midpoint
+		double mx = (x1 + x2) / 2.0;
+		double my = (y1 + y2) / 2.0;
+
+		// Perpendicular vector (-dy, dx), normalized
+		double perpX = -dy / dist;
+		double perpY = dx / dist;
+
+		// Apply displacement along perpendicular
+		double offset = displacement * randomUnit();
+		mx += perpX * offset;
+		my += perpY * offset;
+
+		// Recurse
 		generateFractalCurveRecursive(
-		    points, x1, y1, mx, my, displacement / 2.0, depthToGo - 1);
+		    points, x1, y1, (int) mx, (int) my,
+		    displacement / 2.0, depthToGo - 1);
 		generateFractalCurveRecursive(
-		    points, mx, my, x2, y2, displacement / 2.0, depthToGo - 1);
+		    points, (int) mx, (int) my, x2, y2,
+		    displacement / 2.0, depthToGo - 1);
 	}
 }
 
-std::vector<POINT> GridMap::generateFractalCurveWithNoise(
-    int x, int y, int length)
+// Draw a quadrant of a filled square, with fractal edge
+void GridMap::drawFillQuadrantFractal(HDC hDC, int x, int y, Direction dir)
 {
-	std::vector<POINT> curve;
-	int x1 = x;
-	int y1 = y;
-	int x2 = x + length;
-	int y2 = y;
-	curve.push_back({ x1, y1 });
+	int cellSize = getCellSizePixels();
+	POINT center = { x + cellSize / 2, y + cellSize / 2 };
+
+	// Two edge points based on direction
+	POINT a, b;
+	switch (dir) {
+		case NORTH:
+			a = { x, y };
+			b = { x + cellSize, y };
+			break;
+		case SOUTH:
+			a = { x + cellSize, y + cellSize };
+			b = { x, y + cellSize };
+			break;
+		case EAST:
+			a = { x + cellSize, y };
+			b = { x + cellSize, y + cellSize };
+			break;
+		case WEST:
+			a = { x, y + cellSize };
+			b = { x, y };
+			break;
+	}
+
+	// Generate fractal curve from a to b
+	std::vector<POINT> shape;
+	shape.push_back(a);
 	generateFractalCurveRecursive(
-	    curve, x1, y1, x2, y2, length * 0.33, 5);
-	return curve;
+	    shape, a.x, a.y, b.x, b.y, cellSize * 0.33, 5);
+
+	// Add center point and close polygon
+	shape.push_back(center);
+	shape.push_back(a); // close back to start
+
+	// Fill polygon with black
+	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+	Polygon(hDC, shape.data(), (int)(shape.size()));
 }
 
-// Draw a north floor quadrant with riugh edge
-void GridMap::drawFractalCapAndFill(HDC hDC, int x, int y)
+// Draw a quadrant of a filled square, with smooth edge
+void GridMap::drawFillQuadrantSmooth(HDC hDC, int x, int y, Direction dir)
 {
-	// Create the fractal curve along the top
 	int cellSize = getCellSizePixels();
-	std::vector<POINT> curve =
-	    generateFractalCurveWithNoise(x, y, cellSize);
-
-	// Add center point to form a filled polygon
 	POINT center = { x + cellSize / 2, y + cellSize / 2 };
-	curve.push_back(center);
 
-	// Close the shape by connecting to start
-	curve.push_back(curve.front());
+	// Two adjacent corner points depending on direction
+	POINT a, b;
+	switch (dir) {
+		case NORTH:
+			a = { x, y };
+			b = { x + cellSize, y };
+			break;
+		case SOUTH:
+			a = { x + cellSize, y + cellSize };
+			b = { x, y + cellSize };
+			break;
+		case EAST:
+			a = { x + cellSize, y };
+			b = { x + cellSize, y + cellSize };
+			break;
+		case WEST:
+			a = { x, y + cellSize };
+			b = { x, y };
+			break;
+	}
+
+	// Construct triangle: [a, b, center]
+	POINT triangle[3] = { a, b, center };
 
 	// Fill with black
 	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-	Polygon(hDC, curve.data(), (int)(curve.size()));
+	Polygon(hDC, triangle, 3);
 }
 
-// Draw a fractal line on a diagonal
-void GridMap::generateFractalDiagonalRecursive(
-    std::vector<POINT>& points,
-    int x1, int y1,
-    int x2, int y2,
-    double displacement,
-    int depthToGo)
+// Draw a quadrant of a filled space
+void GridMap::drawFillQuadrant(
+    HDC hDC, int x, int y, Direction dir, bool fractal)
 {
-	if (depthToGo == 0) {
-		points.push_back({ x2, y2 });
+	if (fractal) {
+		drawFillQuadrantFractal(hDC, x, y, dir);
 	}
 	else {
-		int mx = (x1 + x2) / 2;
-		int my = (y1 + y2) / 2;
-
-		// Perpendicular displacement to the line
-		int dx = x2 - x1;
-		int dy = y2 - y1;
-		int perpX = -dy;
-		int perpY = dx;
-
-		double length = sqrt(perpX * perpX + perpY * perpY);
-		double offset = displacement * randomUnit();
-
-		mx += (int)((perpX / length) * offset);
-		my += (int)((perpY / length) * offset);
-
-		generateFractalDiagonalRecursive(
-		    points, x1, y1, mx, my, displacement / 2.0, depthToGo - 1);
-		generateFractalDiagonalRecursive(
-		    points, mx, my, x2, y2, displacement / 2.0, depthToGo - 1);
+		drawFillQuadrantSmooth(hDC, x, y, dir);
 	}
 }
 
-// Draw a diagonally filled space with rough edge
-void GridMap::drawFractalDiagonalFill(
+// Draw a filled space, possibly with fractal edges
+void GridMap::drawFillSpaceFractal(HDC hDC, int x, int y)
+{
+	assert(displayRoughEdges());
+
+	// Convert back to grid coordinates to check neighbors
+	int cellSize = getCellSizePixels();
+	int gx = x / cellSize;
+	int gy = y / cellSize;
+
+	// Draw each quadrant, fractal edge if neighbor open
+	drawFillQuadrant(
+	    hDC, x, y, WEST, gx > 1
+	    && IsFloorOpenType((FloorType) getCellFloor(gx - 1, gy)));
+	drawFillQuadrant(
+	    hDC, x, y, NORTH, gy > 1
+	    && IsFloorOpenType((FloorType) getCellFloor(gx, gy - 1)));
+	drawFillQuadrant(
+	    hDC, x, y, EAST, gx + 1 < width
+	    && IsFloorOpenType((FloorType) getCellFloor(gx + 1, gy)));
+	drawFillQuadrant(
+	    hDC, x, y, SOUTH, gy + 1 < height
+	    && IsFloorOpenType((FloorType) getCellFloor(gx, gy + 1)));
+}
+
+// Draw a diagonally filled space with fractal edge
+void GridMap::drawDiagonalFillFractal(
     HDC hDC, int x, int y, FloorType floor)
 {
-	assert(FLOOR_NWFILL <= floor && floor <= FLOOR_SEFILL);
+	assert(IsFloorDiagonalFill(floor));
 	int cellSize = getCellSizePixels();
 
 	// Declarations
 	POINT start, end;
-	std::vector<POINT> fractal;
+	std::vector<POINT> shape;
 
 	// Choose diagonal
 	if (floor == FLOOR_NEFILL || floor == FLOOR_SWFILL) {
@@ -973,9 +1062,9 @@ void GridMap::drawFractalDiagonalFill(
 	}
 
 	// Generate fractal diagonal
-	fractal.push_back(start);
-	generateFractalDiagonalRecursive(
-	    fractal, start.x, start.y, end.x, end.y, cellSize * 0.33, 5);
+	shape.push_back(start);
+	generateFractalCurveRecursive(
+	    shape, start.x, start.y, end.x, end.y, cellSize * 0.33, 5);
 
 	// Build polygon to fill
 	POINT extraCorner;
@@ -994,17 +1083,18 @@ void GridMap::drawFractalDiagonalFill(
 			break;
 	}
 
-	fractal.push_back(extraCorner);
-	fractal.push_back(fractal.front());
+	shape.push_back(extraCorner);
+	shape.push_back(shape.front());
 
 	// Fill polygon
 	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-	Polygon(hDC, fractal.data(), (int)(fractal.size()));
+	Polygon(hDC, shape.data(), (int)(shape.size()));
 }
 
 // Draw a diagonally filled space (with smooth edge)
-void GridMap::drawDiagonalFill(HDC hDC, int x, int y, FloorType floor)
+void GridMap::drawDiagonalFillSmooth(HDC hDC, int x, int y, FloorType floor)
 {
+	assert(IsFloorDiagonalFill(floor));
 	POINT triangle[3];
 	int cellSize = getCellSizePixels();
 

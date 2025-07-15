@@ -47,8 +47,15 @@ enum ObjectType {
 	OBJECT_FAIL = 255
 };
 
+// Cardinal directions
+enum Direction {
+	NORTH, SOUTH, EAST, WEST
+};
+
 // Feature info function(s)
 bool IsFloorFillType(FloorType floor);
+bool IsFloorOpenType(FloorType floor);
+bool IsFloorDiagonalFill(FloorType floor);
 
 // Filename max length
 const int GRID_FILENAME_MAX = 256;
@@ -118,23 +125,17 @@ class GridMap {
 
 		// Rough-edge painting functions
 		double randomUnit() const;
+		void drawFillSpaceFractal(HDC hDC, int x, int y);
+		void drawFillQuadrant(
+			HDC hDC, int x, int y, Direction dir, bool fractal);
+		void drawFillQuadrantSmooth(HDC hDC, int x, int y, Direction dir);
+		void drawFillQuadrantFractal(HDC hDC, int x, int y, Direction dir);
+		void drawDiagonalFillSmooth(HDC hDC, int x, int y, FloorType floor);
+		void drawDiagonalFillFractal(HDC hDC, int x, int y, FloorType floor);
 		void generateFractalCurveRecursive(
 		    std::vector<POINT>& points,
 		    int x1, int y1, int x2, int y2,
 		    double displacement, int depthToGo);
-		std::vector<POINT> generateFractalCurveWithNoise(
-		    int x, int y, int length);
-		void drawFractalCapAndFill(HDC hDC, int x, int y);
-		void generateFractalDiagonalRecursive(
-		    std::vector<POINT>& points,
-		    int x1, int y1,
-		    int x2, int y2,
-		    double displacement,
-		    int depthToGo);
-		void drawFractalDiagonalFill(
-		    HDC hDC, int x, int y, FloorType floor);
-		void drawDiagonalFill(
-		    HDC hDC, int x, int y, FloorType floor);
 
 	private:
 		GridCell **grid;
