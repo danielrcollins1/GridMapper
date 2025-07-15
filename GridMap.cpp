@@ -428,13 +428,13 @@ void GridMap::paint(HDC hDC)
 	Paint one cell on device context
 
 	NOTE ON RECURSION: 
-	This is recursive to handle rough edges bleeding into neighbor spaces.
+	Recursion here handles rough edges bleeding into neighbor spaces.
 	This isn't perfect for partial repaints,
 	but we need some depth limit to avoid infinite recursion.
-	(E.g.: Draw a tight snaky tunnel trending north or west
-	and you'll see some artifacts.)
 	Also, the higher the limit, the slower it is to zoom in/out
 	on a mostly open map with rough edges.
+	(E.g.: Draw a tight snaky tunnel trending north or west
+	and you'll see some artifacts.)
 */
 void GridMap::paintCell(
     HDC hDC, int x, int y, bool partialRepaint, int depth)
