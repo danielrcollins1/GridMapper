@@ -440,8 +440,7 @@ void GridMap::paintCell(
     HDC hDC, int x, int y, bool partialRepaint, int depth)
 {
 	// Handle recursion limit for open redraws
-	if (depth > 1
-	        && IsFloorOpenType((FloorType) getCellFloor(x, y))) {
+	if (depth > 1 && IsFloorOpenType(getCellFloor(x, y))) {
 		return;
 	}
 
@@ -468,8 +467,7 @@ void GridMap::paintCell(
 	}
 
 	// Repaint neighbors in case of bleeding rough edges
-	if (displayRoughEdges()
-	        && IsFloorOpenType((FloorType) getCellFloor(x, y))) {
+	if (displayRoughEdges() && IsFloorOpenType(getCellFloor(x, y))) {
 		if (x > 0) {
 			paintCell(hDC, x - 1, y, true, depth + 1);
 		}
@@ -1055,16 +1053,16 @@ void GridMap::drawFillSpaceFractal(HDC hDC, int x, int y)
 	// Draw each quadrant, with fractal edge if neighbor open
 	drawFillQuadrant(
 	    hDC, x, y, WEST, gx > 1
-	    && IsFloorOpenType((FloorType) getCellFloor(gx - 1, gy)));
+	    && IsFloorOpenType(getCellFloor(gx - 1, gy)));
 	drawFillQuadrant(
 	    hDC, x, y, NORTH, gy > 1
-	    && IsFloorOpenType((FloorType) getCellFloor(gx, gy - 1)));
+	    && IsFloorOpenType(getCellFloor(gx, gy - 1)));
 	drawFillQuadrant(
 	    hDC, x, y, EAST, gx + 1 < width
-	    && IsFloorOpenType((FloorType) getCellFloor(gx + 1, gy)));
+	    && IsFloorOpenType(getCellFloor(gx + 1, gy)));
 	drawFillQuadrant(
 	    hDC, x, y, SOUTH, gy + 1 < height
-	    && IsFloorOpenType((FloorType) getCellFloor(gx, gy + 1)));
+	    && IsFloorOpenType(getCellFloor(gx, gy + 1)));
 }
 
 // Draw a diagonally filled space with fractal edge
