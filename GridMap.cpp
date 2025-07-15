@@ -1054,10 +1054,10 @@ void GridMap::drawFillSpaceFractal(HDC hDC, int x, int y)
 
 	// Draw each quadrant, with fractal edge if neighbor open
 	drawFillQuadrant(
-	    hDC, x, y, WEST, gx > 1
+	    hDC, x, y, WEST, gx > 0
 	    && IsFloorOpenType(getCellFloor(gx - 1, gy)));
 	drawFillQuadrant(
-	    hDC, x, y, NORTH, gy > 1
+	    hDC, x, y, NORTH, gy > 0
 	    && IsFloorOpenType(getCellFloor(gx, gy - 1)));
 	drawFillQuadrant(
 	    hDC, x, y, EAST, gx + 1 < width
