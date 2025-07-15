@@ -114,15 +114,16 @@ class GridMap {
 		void paintCellWWall(HDC hDC, int xPos, int yPos, GridCell cell);
 		void LetterS(HDC hDC, int x, int y);
 		unsigned cellHash(int x, int y) const;
+		void makeStandardPens();
 
 		// Rough-edge painting functions
 		double randomUnit() const;
 		void generateFractalCurveRecursive(
 		    std::vector<POINT>& points,
-		    int x1, int y1, int x2, int y2, 
-			double displacement, int depthToGo);
+		    int x1, int y1, int x2, int y2,
+		    double displacement, int depthToGo);
 		std::vector<POINT> generateFractalCurveWithNoise(
-		    int x, int y, int length, double initialDisplacement);
+		    int x, int y, int length);
 		void drawFractalCapAndFill(HDC hDC, int x, int y);
 
 	private:
@@ -130,5 +131,6 @@ class GridMap {
 		unsigned int width, height, displayCode;
 		char filename[GRID_FILENAME_MAX];
 		bool changed, fileLoadOk;
+		HPEN ThinGrayPen = NULL, ThickBlackPen = NULL;
 };
 #endif

@@ -130,14 +130,7 @@ GridMap::GridMap(int _width, int _height)
 	filename[0] = '\0';
 	changed = false;
 	fileLoadOk = true;
-}
-
-// Destructor
-GridMap::~GridMap()
-{
-	for (int x = 0; x < width; x++)
-		delete [] grid[x];
-	delete [] grid;
+	makeStandardPens();
 }
 
 // Constructor taking filename
@@ -174,6 +167,7 @@ GridMap::GridMap(char *_filename)
 	changed = false;
 	fileLoadOk = true;
 	setFilename(_filename);
+	makeStandardPens();
 	return;
 
 fail:
@@ -181,6 +175,17 @@ fail:
 	width = height = displayCode = 0;
 	filename[0] = '\0';
 	fileLoadOk = false;
+}
+
+// Destructor
+GridMap::~GridMap()
+{
+	DeleteObject(ThinGrayPen);
+	DeleteObject(ThickBlackPen);
+	for (int x = 0; x < width; x++) {
+		delete [] grid[x];
+	}
+	delete [] grid;
 }
 
 // Save to previously stored filename
@@ -366,22 +371,16 @@ void GridMap::clearMap(int _floor)
 // Drawing code
 //------------------------------------------------------------------
 
-// Globals
-HPEN ThinGrayPen = NULL;
-HPEN ThickBlackPen = NULL;
+// Make standard pens
+void GridMap::makeStandardPens() 
+{
+	ThinGrayPen = CreatePen(PS_SOLID, 1, 0x00808080);
+	ThickBlackPen = CreatePen(PS_SOLID, 3, 0x00000000);
+}
 
 // Paint entire map on device context
 void GridMap::paint(HDC hDC)
 {
-	// Create pens if needed
-	if (!ThickBlackPen) {
-		ThickBlackPen = CreatePen(PS_SOLID, 3, 0x00000000);
-	}
-	if (!ThinGrayPen) {
-		ThinGrayPen = CreatePen(PS_SOLID, 1, 0x00808080);
-	}
-
-	// Draw each grid cell
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
 			paintCell(hDC, x, y, false);
@@ -431,23 +430,23 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	}
 
 	// Testing rough edge on north
-//	if (displayRoughEdges() && cell.floor == FLOOR_FILL && y > 0
-//	        && grid[x/cellSize][y/cellSize - 1].floor == FLOOR_OPEN) {
-//
-//		// Draw ground white
-//		SelectObject(hDC, GetStockObject(WHITE_PEN));
-//		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
-//		Rectangle(hDC, x, y, x + cellSize, y + cellSize);
-//
-//		// Draw the black fractal cap
-//		SelectObject(hDC, GetStockObject(BLACK_PEN));
-//		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-//		drawFractalCapAndFill(hDC, x, y);
-//	}
-//	else {
-//		Rectangle(hDC, x, y, x + cellSize, y + cellSize);
-//	}
-	Rectangle(hDC, x, y, x + cellSize, y + cellSize);
+	if (displayRoughEdges() && cell.floor == FLOOR_FILL && y > 0
+	        && grid[x/cellSize][y/cellSize - 1].floor == FLOOR_OPEN) {
+
+		// Draw ground white
+		SelectObject(hDC, GetStockObject(WHITE_PEN));
+		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
+		Rectangle(hDC, x, y, x + cellSize, y + cellSize);
+
+		// Draw the black fractal cap
+		SelectObject(hDC, GetStockObject(BLACK_PEN));
+		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+		drawFractalCapAndFill(hDC, x, y);
+	}
+	else {
+		Rectangle(hDC, x, y, x + cellSize, y + cellSize);
+	}
+//	Rectangle(hDC, x, y, x + cellSize, y + cellSize);
 
 	// Set pen for other features
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
@@ -902,7 +901,7 @@ void GridMap::generateFractalCurveRecursive(
 }
 
 std::vector<POINT> GridMap::generateFractalCurveWithNoise(
-    int x, int y, int length, double initialDisplacement)
+    int x, int y, int length)
 {
 	std::vector<POINT> curve;
 	int x1 = x;
@@ -911,7 +910,7 @@ std::vector<POINT> GridMap::generateFractalCurveWithNoise(
 	int y2 = y;
 	curve.push_back({ x1, y1 });
 	generateFractalCurveRecursive(
-	    curve, x1, y1, x2, y2, initialDisplacement, 8);
+	    curve, x1, y1, x2, y2, length * 0.33, 5);
 	return curve;
 }
 
@@ -921,8 +920,7 @@ void GridMap::drawFractalCapAndFill(HDC hDC, int x, int y)
 	// Create the fractal curve along the top
 	int cellSize = getCellSizePixels();
 	std::vector<POINT> curve = 
-		generateFractalCurveWithNoise(
-			x, y, cellSize, cellSize * 0.33);
+		generateFractalCurveWithNoise(x, y, cellSize);
 
 	// Add center point to form a filled polygon
 	POINT center = { x + cellSize / 2, y + cellSize / 2 };
