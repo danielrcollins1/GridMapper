@@ -54,6 +54,12 @@ bool IsFloorDiagonalFill(FloorType floor)
 	return FLOOR_NWFILL <= floor && floor <= FLOOR_SEFILL;
 }
 
+// Is this floor type either fully or partially open?
+bool IsFloorSemiOpen(FloorType floor)
+{
+	return IsFloorOpenType(floor) || IsFloorDiagonalFill(floor);
+}
+
 //------------------------------------------------------------------
 // Display code handlers
 //------------------------------------------------------------------
@@ -440,7 +446,7 @@ void GridMap::paintCell(
     HDC hDC, int x, int y, bool partialRepaint, int depth)
 {
 	// Handle recursion limit for open redraws
-	if (depth > 1 && IsFloorOpenType(getCellFloor(x, y))) {
+	if (depth > 1 && IsFloorSemiOpen(getCellFloor(x, y))) {
 		return;
 	}
 
@@ -467,7 +473,7 @@ void GridMap::paintCell(
 	}
 
 	// Repaint neighbors in case of bleeding rough edges
-	if (displayRoughEdges() && IsFloorOpenType(getCellFloor(x, y))) {
+	if (displayRoughEdges() && IsFloorSemiOpen(getCellFloor(x, y))) {
 		if (x > 0) {
 			paintCell(hDC, x - 1, y, true, depth + 1);
 		}
@@ -508,7 +514,7 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	// Draw a filled space with rough edges
 	if (cell.floor == FLOOR_FILL) {
 		assert(displayRoughEdges());
-		drawFillSpaceFractal(hDC, x, y);
+		drawFillSpaceRough(hDC, x, y);
 	}
 
 	// Stairs (series of parallel lines)
@@ -565,7 +571,7 @@ void GridMap::paintCellFloor(HDC hDC, int x, int y, GridCell cell)
 	// Diagonal half-filled space
 	if (IsFloorDiagonalFill((FloorType) cell.floor)) {
 		if (displayRoughEdges()) {
-			drawDiagonalFillFractal(hDC, x, y, (FloorType) cell.floor);
+			drawDiagonalFillRough(hDC, x, y, (FloorType) cell.floor);
 		}
 		else {
 			drawDiagonalFillSmooth(hDC, x, y, (FloorType) cell.floor);
@@ -988,7 +994,7 @@ void GridMap::generateFractalCurveRecursive(
 }
 
 // Draw a quadrant of a filled square, with fractal edge
-void GridMap::drawFillQuadrantFractal(HDC hDC, int x, int y, Direction dir)
+void GridMap::drawFillQuadrantRough(HDC hDC, int x, int y, Direction dir)
 {
 	// Get dimensions
 	int cellSize = getCellSizePixels();
@@ -1031,19 +1037,70 @@ void GridMap::drawFillQuadrantSmooth(HDC hDC, int x, int y, Direction dir)
 }
 
 // Draw a quadrant of a filled space
-void GridMap::drawFillQuadrant(
-    HDC hDC, int x, int y, Direction dir, bool fractal)
+void GridMap::drawFillQuadrant(HDC hDC, int x, int y, Direction dir)
 {
-	if (fractal) {
-		drawFillQuadrantFractal(hDC, x, y, dir);
+	assert(displayRoughEdges());
+	
+	// Convert back to grid coordinates to check neighbors
+	int gx = x / getCellSizePixels();
+	int gy = y / getCellSizePixels();
+	
+	// Rough-up if exposed edge
+	if (isExposedEdge(gx, gy, dir)) {
+		drawFillQuadrantRough(hDC, x, y, dir);
 	}
 	else {
 		drawFillQuadrantSmooth(hDC, x, y, dir);
 	}
 }
 
+/*
+	Determine if a given cell edge is an exposed surface
+	(boundary between fill & open spaces, possibly roughed)
+	Assume given cell is filled inside indicated edge
+*/
+bool GridMap::isExposedEdge(int x, int y, Direction dir)
+{
+	// Note: This could maybe be expanded to diagonal fills
+	assert(getCellFloor(x, y) == FLOOR_FILL);
+
+	// Initialize neighbor coordinates
+	int nx = x, ny = y;
+
+	switch (dir) {
+		case WEST:
+			nx = nx - 1;
+			return nx >= 0 &&
+				(IsFloorOpenType(getCellFloor(nx, ny))
+				|| getCellFloor(nx, ny) == FLOOR_NWFILL
+				|| getCellFloor(nx, ny) == FLOOR_SWFILL);
+
+		case EAST:
+			nx = nx + 1;
+			return nx < width &&
+				(IsFloorOpenType(getCellFloor(nx, ny))
+				|| getCellFloor(nx, ny) == FLOOR_NEFILL
+				|| getCellFloor(nx, ny) == FLOOR_SEFILL);
+
+		case NORTH:
+			ny = ny - 1;
+			return ny >= 0 &&
+				(IsFloorOpenType(getCellFloor(nx, ny))
+				|| getCellFloor(nx, ny) == FLOOR_NEFILL
+				|| getCellFloor(nx, ny) == FLOOR_NWFILL);
+				
+		case SOUTH:
+			ny = ny + 1;
+			return ny < height &&
+				(IsFloorOpenType(getCellFloor(nx, ny))
+				|| getCellFloor(nx, ny) == FLOOR_SEFILL
+				|| getCellFloor(nx, ny) == FLOOR_SWFILL);
+	}
+	return false;
+}
+
 // Draw a filled space, possibly with fractal edges
-void GridMap::drawFillSpaceFractal(HDC hDC, int x, int y)
+void GridMap::drawFillSpaceRough(HDC hDC, int x, int y)
 {
 	assert(displayRoughEdges());
 
@@ -1052,23 +1109,15 @@ void GridMap::drawFillSpaceFractal(HDC hDC, int x, int y)
 	int gx = x / cellSize;
 	int gy = y / cellSize;
 
-	// Draw each quadrant, with fractal edge if neighbor open
-	drawFillQuadrant(
-	    hDC, x, y, WEST, gx > 0
-	    && IsFloorOpenType(getCellFloor(gx - 1, gy)));
-	drawFillQuadrant(
-	    hDC, x, y, NORTH, gy > 0
-	    && IsFloorOpenType(getCellFloor(gx, gy - 1)));
-	drawFillQuadrant(
-	    hDC, x, y, EAST, gx + 1 < width
-	    && IsFloorOpenType(getCellFloor(gx + 1, gy)));
-	drawFillQuadrant(
-	    hDC, x, y, SOUTH, gy + 1 < height
-	    && IsFloorOpenType(getCellFloor(gx, gy + 1)));
+	// Draw each quadrant
+	drawFillQuadrant(hDC, x, y, NORTH);
+	drawFillQuadrant(hDC, x, y, EAST);
+	drawFillQuadrant(hDC, x, y, SOUTH);
+	drawFillQuadrant(hDC, x, y, WEST);
 }
 
 // Draw a diagonally filled space with fractal edge
-void GridMap::drawDiagonalFillFractal(
+void GridMap::drawDiagonalFillRough(
     HDC hDC, int x, int y, FloorType floor)
 {
 	assert(IsFloorDiagonalFill(floor));

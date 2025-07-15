@@ -56,6 +56,7 @@ enum Direction {
 bool IsFloorFillType(FloorType floor);
 bool IsFloorOpenType(FloorType floor);
 bool IsFloorDiagonalFill(FloorType floor);
+bool IsFloorSemiOpen(FloorType floor);
 
 // Filename max length
 const int GRID_FILENAME_MAX = 256;
@@ -126,15 +127,15 @@ class GridMap {
 
 		// Rough-edge painting functions
 		double randomUnit() const;
+		bool isExposedEdge(int x, int y, Direction dir);
 		void getVertexPoints(
 		    int x, int y, POINT& a, POINT& b, Direction dir);
-		void drawFillSpaceFractal(HDC hDC, int x, int y);
-		void drawFillQuadrant(
-		    HDC hDC, int x, int y, Direction dir, bool fractal);
+		void drawFillSpaceRough(HDC hDC, int x, int y);
+		void drawFillQuadrant(HDC hDC, int x, int y, Direction dir);
 		void drawFillQuadrantSmooth(HDC hDC, int x, int y, Direction dir);
-		void drawFillQuadrantFractal(HDC hDC, int x, int y, Direction dir);
+		void drawFillQuadrantRough(HDC hDC, int x, int y, Direction dir);
 		void drawDiagonalFillSmooth(HDC hDC, int x, int y, FloorType floor);
-		void drawDiagonalFillFractal(HDC hDC, int x, int y, FloorType floor);
+		void drawDiagonalFillRough(HDC hDC, int x, int y, FloorType floor);
 		void generateFractalCurveRecursive(
 		    std::vector<POINT>& points,
 		    int x1, int y1, int x2, int y2,
