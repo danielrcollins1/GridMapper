@@ -68,7 +68,7 @@ class GridMap {
 	public:
 
 		// Constructors
-		GridMap(int width, int height);
+		GridMap(unsigned width, unsigned height);
 		GridMap(char *filename);
 		~GridMap();
 
@@ -77,28 +77,29 @@ class GridMap {
 		int getHeightCells();
 		int getWidthPixels();
 		int getHeightPixels();
-		FloorType getCellFloor(int x, int y);
-		WallType getCellNWall(int x, int y);
-		WallType getCellWWall(int x, int y);
-		ObjectType getCellObject(int x, int y);
-		bool canBuildNWall(int x, int y);
-		bool canBuildWWall(int x, int y);
+		FloorType getCellFloor(unsigned x, unsigned y);
+		WallType getCellNWall(unsigned x, unsigned y);
+		WallType getCellWWall(unsigned x, unsigned y);
+		ObjectType getCellObject(unsigned x, unsigned y);
+		bool canBuildNWall(unsigned x, unsigned y);
+		bool canBuildWWall(unsigned x, unsigned y);
 		bool isChanged();
 		bool isFileLoadOk();
 		char* getFilename();
 
 		// Mutators
-		void setCellFloor(int x, int y, int floor);
-		void setCellNWall(int x, int y, int wall);
-		void setCellWWall(int x, int y, int wall);
-		void setCellObject(int x, int y, int object);
+		void setCellFloor(unsigned x, unsigned y, int floor);
+		void setCellNWall(unsigned x, unsigned y, int wall);
+		void setCellWWall(unsigned x, unsigned y, int wall);
+		void setCellObject(unsigned x, unsigned y, int object);
 		void clearMap(int floor);
 		void setFilename(char *name);
 
 		// Paint on a display context
 		void paint(HDC hDC);
 		void paintCell(
-		    HDC hDC, int x, int y, bool partialRepaint, int depth = 0);
+		    HDC hDC, unsigned x, unsigned y, 
+			bool partialRepaint, int depth = 0);
 
 		// Save to file
 		int save();
@@ -143,7 +144,7 @@ class GridMap {
 
 	private:
 		GridCell **grid;
-		unsigned int width, height, displayCode;
+		unsigned width, height, displayCode;
 		char filename[GRID_FILENAME_MAX];
 		bool changed, fileLoadOk;
 		HPEN ThinGrayPen = NULL, ThickBlackPen = NULL;

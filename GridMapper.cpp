@@ -846,17 +846,21 @@ void ChangeGridSize(HWND hWnd, int size)
 
 void SetNewMap(HWND hWnd, GridMap *newmap)
 {
-	delete gridmap;
+	if (gridmap) {
+		delete gridmap;
+	}
 	gridmap = newmap;
-	HMENU menu = GetMenu(hWnd);
 	SetBkgdDC(hWnd);
 	SetScrollRange(hWnd, true);
-	SetSelectedFeature(hWnd, IDM_FLOOR_OPEN);
-	CheckMenuItem(GetMenu(hWnd), IDM_HIDE_GRID, MF_BYCOMMAND |
-	              (gridmap->displayNoGrid() ? MF_CHECKED : MF_UNCHECKED));
-	CheckMenuItem(GetMenu(hWnd), IDM_ROUGH_EDGES, MF_BYCOMMAND |
-	              (gridmap->displayRoughEdges() ? MF_CHECKED : MF_UNCHECKED));
 	UpdateEntireWindow(hWnd);
+
+	// Set menu selections
+	HMENU hMenu = GetMenu(hWnd);
+	SetSelectedFeature(hWnd, IDM_FLOOR_OPEN);
+	CheckMenuItem(hMenu, IDM_HIDE_GRID, MF_BYCOMMAND |
+	              (gridmap->displayNoGrid() ? MF_CHECKED : MF_UNCHECKED));
+	CheckMenuItem(hMenu, IDM_ROUGH_EDGES, MF_BYCOMMAND |
+	              (gridmap->displayRoughEdges() ? MF_CHECKED : MF_UNCHECKED));
 }
 
 bool NewMapFromSpecs(HWND hWnd, int newWidth, int newHeight)

@@ -44,8 +44,9 @@ bool IsFloorOpenType(FloorType floor)
 		case FLOOR_SPIRALSTAIRS:
 		case FLOOR_WATER:
 			return true;
+		default:
+			return false;
 	}
-	return false;
 }
 
 // Is this floor type one of the diagonal fills?
@@ -139,17 +140,17 @@ void GridMap::toggleNoGrid()
 //------------------------------------------------------------------
 
 // Constructor taking dimensions
-GridMap::GridMap(int _width, int _height)
+GridMap::GridMap(unsigned _width, unsigned _height)
 {
 	width = _width;
 	height = _height;
 	displayCode = 0;
 	setCellSizePixels(getCellSizeDefault());
 	grid = new GridCell*[width];
-	for (int x = 0; x < width; x++)
+	for (unsigned x = 0; x < width; x++)
 		grid[x] = new GridCell[height];
-	for (int x = 0; x < width; x++) {
-		for (int y = 0; y < height; y++) {
+	for (unsigned x = 0; x < width; x++) {
+		for (unsigned y = 0; y < height; y++) {
 			grid[x][y].floor = FLOOR_FILL;
 			grid[x][y].nwall = WALL_OPEN;
 			grid[x][y].wwall = WALL_OPEN;
@@ -168,7 +169,6 @@ GridMap::GridMap(char *_filename)
 	// Declarations
 	FILE *f;
 	char header[4];
-	int x;
 
 	// Open file
 	if (!(f = fopen(_filename, "rb"))) goto fail;
@@ -184,10 +184,10 @@ GridMap::GridMap(char *_filename)
 	fread(&width, sizeof(int), 1, f);
 	fread(&height, sizeof(int), 1, f);
 	grid = new GridCell*[width];
-	for (x = 0; x < width; x++) {
+	for (unsigned x = 0; x < width; x++) {
 		grid[x] = new GridCell[height];
 	}
-	for (x = 0; x < width; x++) {
+	for (unsigned x = 0; x < width; x++) {
 		fread(grid[x], sizeof(GridCell), height, f);
 	}
 
@@ -211,7 +211,7 @@ GridMap::~GridMap()
 {
 	DeleteObject(ThinGrayPen);
 	DeleteObject(ThickBlackPen);
-	for (int x = 0; x < width; x++) {
+	for (unsigned x = 0; x < width; x++) {
 		delete [] grid[x];
 	}
 	delete [] grid;
@@ -232,7 +232,7 @@ int GridMap::save()
 	fwrite(&displayCode, sizeof(int), 1, f);
 	fwrite(&width, sizeof(int), 1, f);
 	fwrite(&height, sizeof(int), 1, f);
-	for (int x = 0; x < width; x++) {
+	for (unsigned x = 0; x < width; x++) {
 		fwrite(grid[x], sizeof(GridCell), height, f);
 	}
 
@@ -266,22 +266,22 @@ int GridMap::getHeightPixels()
 	return height * getCellSizePixels();
 }
 
-FloorType GridMap::getCellFloor(int x, int y)
+FloorType GridMap::getCellFloor(unsigned x, unsigned y)
 {
 	return (FloorType) grid[x][y].floor;
 }
 
-WallType GridMap::getCellNWall(int x, int y)
+WallType GridMap::getCellNWall(unsigned x, unsigned y)
 {
 	return (WallType) grid[x][y].nwall;
 }
 
-WallType GridMap::getCellWWall(int x, int y)
+WallType GridMap::getCellWWall(unsigned x, unsigned y)
 {
 	return (WallType) grid[x][y].wwall;
 }
 
-ObjectType GridMap::getCellObject(int x, int y)
+ObjectType GridMap::getCellObject(unsigned x, unsigned y)
 {
 	return (ObjectType) grid[x][y].object;
 }
@@ -305,7 +305,7 @@ char* GridMap::getFilename()
 	Can we erect a wall partition to the north of a given cell?
 	Prohibited if spaced filled on either side.
 */
-bool GridMap::canBuildNWall(int x, int y)
+bool GridMap::canBuildNWall(unsigned x, unsigned y)
 {
 	if (y == 0) {            // on top border
 		return false;
@@ -315,12 +315,16 @@ bool GridMap::canBuildNWall(int x, int y)
 		case FLOOR_SWFILL:
 		case FLOOR_SEFILL:
 			return false;
+		default:
+			break;
 	}
 	switch (getCellFloor(x, y)) {
 		case FLOOR_FILL:
 		case FLOOR_NWFILL:
 		case FLOOR_NEFILL:
 			return false;
+		default:
+			break;
 	}
 	return true;
 }
@@ -329,7 +333,7 @@ bool GridMap::canBuildNWall(int x, int y)
 	Can we erect a wall partition to the west of a given cell?
 	Prohibited if spaced filled on either side.
 */
-bool GridMap::canBuildWWall(int x, int y)
+bool GridMap::canBuildWWall(unsigned x, unsigned y)
 {
 	if (x == 0) {            // on left border
 		return false;
@@ -339,12 +343,16 @@ bool GridMap::canBuildWWall(int x, int y)
 		case FLOOR_NEFILL:
 		case FLOOR_SEFILL:
 			return false;
+		default:
+			break;
 	}
 	switch (getCellFloor(x, y)) {
 		case FLOOR_FILL:
 		case FLOOR_NWFILL:
 		case FLOOR_SWFILL:
 			return false;
+		default:
+			break;
 	}
 	return true;
 }
@@ -353,25 +361,25 @@ bool GridMap::canBuildWWall(int x, int y)
 // Mutators
 //------------------------------------------------------------------
 
-void GridMap::setCellFloor(int x, int y, int floor)
+void GridMap::setCellFloor(unsigned x, unsigned y, int floor)
 {
 	grid[x][y].floor = floor;
 	changed = true;
 }
 
-void GridMap::setCellNWall(int x, int y, int wall)
+void GridMap::setCellNWall(unsigned x, unsigned y, int wall)
 {
 	grid[x][y].nwall = wall;
 	changed = true;
 }
 
-void GridMap::setCellWWall(int x, int y, int wall)
+void GridMap::setCellWWall(unsigned x, unsigned y, int wall)
 {
 	grid[x][y].wwall = wall;
 	changed = true;
 }
 
-void GridMap::setCellObject(int x, int y, int object)
+void GridMap::setCellObject(unsigned x, unsigned y, int object)
 {
 	grid[x][y].object = object;
 	changed = true;
@@ -385,8 +393,8 @@ void GridMap::setFilename(char *name)
 // Clear the entire map
 void GridMap::clearMap(int _floor)
 {
-	for (int x = 0; x < width; x++) {
-		for (int y = 0; y < height; y++) {
+	for (unsigned x = 0; x < width; x++) {
+		for (unsigned y = 0; y < height; y++) {
 			grid[x][y].floor = _floor;
 			grid[x][y].wwall = WALL_OPEN;
 			grid[x][y].nwall = WALL_OPEN;
@@ -423,8 +431,8 @@ unsigned GridMap::cellHash(int x, int y) const
 // Paint entire map on device context
 void GridMap::paint(HDC hDC)
 {
-	for (int x = 0; x < width; x++) {
-		for (int y = 0; y < height; y++) {
+	for (unsigned x = 0; x < width; x++) {
+		for (unsigned y = 0; y < height; y++) {
 			paintCell(hDC, x, y, false);
 		}
 	}
@@ -443,7 +451,7 @@ void GridMap::paint(HDC hDC)
 	and you'll see some artifacts.)
 */
 void GridMap::paintCell(
-    HDC hDC, int x, int y, bool partialRepaint, int depth)
+    HDC hDC, unsigned x, unsigned y, bool partialRepaint, int depth)
 {
 	// Handle recursion limit for open redraws
 	if (depth > 1 && IsFloorSemiOpen(getCellFloor(x, y))) {
@@ -1077,7 +1085,7 @@ bool GridMap::isExposedEdge(int x, int y, Direction dir)
 
 		case EAST:
 			nx = nx + 1;
-			return nx < width &&
+			return nx < (int) width &&
 				(IsFloorOpenType(getCellFloor(nx, ny))
 				|| getCellFloor(nx, ny) == FLOOR_NEFILL
 				|| getCellFloor(nx, ny) == FLOOR_SEFILL);
@@ -1091,7 +1099,7 @@ bool GridMap::isExposedEdge(int x, int y, Direction dir)
 				
 		case SOUTH:
 			ny = ny + 1;
-			return ny < height &&
+			return ny < (int) height &&
 				(IsFloorOpenType(getCellFloor(nx, ny))
 				|| getCellFloor(nx, ny) == FLOOR_SEFILL
 				|| getCellFloor(nx, ny) == FLOOR_SWFILL);
@@ -1103,11 +1111,6 @@ bool GridMap::isExposedEdge(int x, int y, Direction dir)
 void GridMap::drawFillSpaceRough(HDC hDC, int x, int y)
 {
 	assert(displayRoughEdges());
-
-	// Convert back to grid coordinates to check neighbors
-	int cellSize = getCellSizePixels();
-	int gx = x / cellSize;
-	int gy = y / cellSize;
 
 	// Draw each quadrant
 	drawFillQuadrant(hDC, x, y, NORTH);
@@ -1150,6 +1153,9 @@ void GridMap::drawDiagonalFillRough(
 			break;
 		case FLOOR_SWFILL:
 			extraVertex = { x, y + cellSize };
+			break;
+		default:
+			assert(FALSE);
 			break;
 	}
 
@@ -1195,6 +1201,9 @@ void GridMap::drawDiagonalFillSmooth(HDC hDC, int x, int y, FloorType floor)
 			triangle[0] = { x + cellSize, y + cellSize };
 			triangle[1] = { x, y + cellSize };
 			triangle[2] = { x + cellSize, y };
+			break;
+		default:
+			assert(FALSE);
 			break;
 	}
 
