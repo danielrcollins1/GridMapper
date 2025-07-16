@@ -451,6 +451,8 @@ void GridMap::paint(HDC hDC)
 /*
 	Paint one cell on device context
 
+	Assumes we've previously called paint() to store hMainDC
+
 	NOTE ON RECURSION:
 	Recursion here handles rough edges bleeding into neighbor spaces.
 	This isn't perfect for partial repaints,
@@ -463,6 +465,8 @@ void GridMap::paint(HDC hDC)
 void GridMap::paintCell(
     GridCoord gc, bool partialRepaint, int recursionDepth)
 {
+	assert(hMainDC != NULL);
+	
 	// Handle recursion limit for open redraws
 	if (recursionDepth > 1 && IsFloorSemiOpen(getCellFloor(gc))) {
 		return;

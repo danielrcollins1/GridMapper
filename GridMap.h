@@ -154,7 +154,7 @@ class GridMap {
 
 		// Drawing context handles
 		HPEN ThinGrayPen = NULL, ThickBlackPen = NULL;
-		HDC hMainDC;
+		HDC hMainDC = NULL;
 
 		// Constants for fractal edges
 		const int RECURSION_LIMIT = 4;
