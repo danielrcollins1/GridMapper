@@ -35,12 +35,12 @@ int selectedFeature = 0;
 bool LButtonCapture = false;
 
 // Function prototypes
-ATOM MyRegisterClass(HINSTANCE hInstance);
+ATOM MyRegisterClass(HINSTANCE);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK About(HWND, UINT, WPARAM, LPARAM);
-bool CommandProc(HWND hWnd, int cmdId);
-void DestroyObjects();
+LRESULT CALLBACK NewDialog(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK GridSizeDialog(HWND, UINT, WPARAM, LPARAM);
 
 /*
 	Win32 application entry point.
@@ -148,13 +148,13 @@ void InitFirstMap()
 		char buffer[512];
 		WideCharToMultiByte(
 		    CP_UTF8, 0, argv[1], -1, buffer, sizeof(buffer), NULL, NULL);
-		NewMapFromFile(hMainWnd, buffer);
+		NewMapFromFile(buffer);
 	}
 	LocalFree(argv);
 
 	// If no file loaded, make a blank map
 	if (!gridmap) {
-		NewMapFromSpecs(hMainWnd, DefaultMapWidth, DefaultMapHeight);
+		NewMapFromSpecs(DefaultMapWidth, DefaultMapHeight);
 	}
 }
 
@@ -166,25 +166,25 @@ LRESULT CALLBACK WndProc(
 {
 	switch (message) {
 		case WM_PAINT:
-			MyPaintWindow(hWnd);
+			MyPaintWindow();
 			break;
 		case WM_SIZE:
-			SetScrollRange(hWnd, false);
+			SetScrollRange(false);
 			break;
 		case WM_HSCROLL:
-			HorzScrollHandler(hWnd, wParam);
+			HorzScrollHandler(wParam);
 			break;
 		case WM_VSCROLL:
-			VertScrollHandler(hWnd, wParam);
+			VertScrollHandler(wParam);
 			break;
 		case WM_MOUSEWHEEL:
-			ScrollWheelHandler(hWnd, wParam);
+			ScrollWheelHandler(wParam);
 			break;
 		case WM_KEYDOWN:
-			MyKeyHandler(hWnd, wParam);
+			MyKeyHandler(wParam);
 			break;
 		case WM_COMMAND:
-			if (!CommandProc(hWnd, LOWORD(wParam)))
+			if (!ProcessCommand(LOWORD(wParam)))
 				return DefWindowProc(hWnd, message, wParam, lParam);
 			break;
 		case WM_LBUTTONUP:
@@ -192,14 +192,14 @@ LRESULT CALLBACK WndProc(
 			break;
 		case WM_LBUTTONDOWN:
 			LButtonCapture = true;
-			MyLButtonHandler(hWnd, lParam);
+			MyLButtonHandler(lParam);
 			break;
 		case WM_MOUSEMOVE:
 			if (LButtonCapture && (wParam & MK_LBUTTON))
-				MyLButtonHandler(hWnd, lParam);
+				MyLButtonHandler(lParam);
 			break;
 		case WM_CLOSE:
-			if (OkDiscardChanges(hWnd))
+			if (OkDiscardChanges())
 				return DefWindowProc(hWnd, message, wParam, lParam);
 			break;
 		case WM_DESTROY:
@@ -216,63 +216,67 @@ LRESULT CALLBACK WndProc(
 	Processes application-specific commands for the main window,
 	sent via WM_COMMAND. Returns "true" if we handle it.
 */
-bool CommandProc(HWND hWnd, int cmdId)
+bool ProcessCommand(int cmdId)
 {
 	// Catch commands requiring okay to discard changes
 	if (cmdId == IDM_NEW || cmdId == IDM_OPEN || cmdId == IDM_EXIT
 	        || cmdId == IDM_FILL_MAP || cmdId == IDM_CLEAR_MAP) {
-		if (!OkDiscardChanges(hWnd))
+		if (!OkDiscardChanges())
 			return true;
 	}
 
 	// Catch feature-to-draw Tool selections
 	if (START_BASIC_FLOOR_TOOLS <= cmdId && cmdId <= END_OBJECT_TOOLS) {
-		SetSelectedFeature(hWnd, cmdId);
+		SetSelectedFeature(cmdId);
 		return true;
 	}
 
 	// Parse other menu selections
 	switch (cmdId) {
 		case IDM_OPEN:
-			OpenMap(hWnd);
+			OpenMap();
 			break;
 		case IDM_SAVE:
-			SaveMap(hWnd);
+			SaveMap();
 			break;
 		case IDM_SAVE_AS:
-			SaveMapAs(hWnd);
+			SaveMapAs();
 			break;
 		case IDM_COPY:
-			CopyMap(hWnd);
+			CopyMap();
 			break;
 		case IDM_PRINT:
-			PrintMap(hWnd);
+			PrintMap();
 			break;
 		case IDM_EXIT:
-			DestroyWindow(hWnd);
+			DestroyWindow(hMainWnd);
 			break;
 		case IDM_FILL_MAP:
-			ClearMap(hWnd, false);
+			ClearMap(false);
 			break;
 		case IDM_CLEAR_MAP:
-			ClearMap(hWnd, true);
+			ClearMap(true);
+			break;
+		case IDM_HIDE_GRID:
+			ToggleGridLines();
+			break;
+		case IDM_ROUGH_EDGES:
+			ToggleRoughEdges();
 			break;
 		case IDM_NEW:
-			DialogBox(hInst, (LPCTSTR)IDD_NEWMAP, hWnd, (DLGPROC)NewDialog);
+			DialogBox(
+				hInst, (LPCTSTR) IDD_NEWMAP, 
+				hMainWnd, (DLGPROC) NewDialog);
+			break;
+		case IDM_ABOUT:
+			DialogBox(
+				hInst, (LPCTSTR) IDD_ABOUTBOX, 
+				hMainWnd, (DLGPROC) About);
 			break;
 		case IDM_SET_GRID_SIZE:
 			DialogBox(
-			    hInst, (LPCTSTR)IDD_SETGRIDSIZE, hWnd,
-			    (DLGPROC)GridSizeDialog);
-			break;
-		case IDM_ABOUT:
-			DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
-			break;
-		case IDM_HIDE_GRID:
-			ToggleGridLines(hWnd);
-			break;
-		case IDM_ROUGH_EDGES:
-			ToggleRoughEdges(hWnd);
+			    hInst, (LPCTSTR) IDD_SETGRIDSIZE, 
+				hMainWnd, (DLGPROC) GridSizeDialog);
 			break;
 		default:
 			return false;
@@ -300,52 +304,52 @@ unsigned GetGridSize()
 	return gridmap->getCellSizePixels();
 }
 
-void UpdateBkgdCell(HWND hWnd, GridCoord gc)
+void UpdateBkgdCell(GridCoord gc)
 {
 	gridmap->paintCell(gc, true);
-	UpdateEntireWindow(hWnd);
+	UpdateEntireWindow();
 }
 
-void UpdateEntireWindow(HWND hWnd)
+void UpdateEntireWindow()
 {
 	RECT rw;
-	GetClientRect(hWnd, &rw);
-	InvalidateRect(hWnd, &rw, false);
-	UpdateWindow(hWnd);
+	GetClientRect(hMainWnd, &rw);
+	InvalidateRect(hMainWnd, &rw, false);
+	UpdateWindow(hMainWnd);
 }
 
-void SetScrollRange(HWND hWnd, bool zeroPos)
+void SetScrollRange(bool zeroPos)
 {
 	// Get client rectangle
 	RECT rw;
-	GetClientRect(hWnd, &rw);
+	GetClientRect(hMainWnd, &rw);
 
 	// Set horizontal scrollbar
 	int hMax = (gridmap ? gridmap->getWidthPixels() : 0);
-	int hPos = (zeroPos ? 0 : GetHorzScrollPos(hWnd));
+	int hPos = (zeroPos ? 0 : GetHorzScrollPos());
 	SCROLLINFO infoHorz = {
 		sizeof(SCROLLINFO), SIF_ALL, 0, hMax,
 		(UINT) rw.right, hPos, 0
 	};
-	SetScrollInfo(hWnd, SB_HORZ, &infoHorz, TRUE);
+	SetScrollInfo(hMainWnd, SB_HORZ, &infoHorz, TRUE);
 
 	// Set vertical scrollbar
 	int vMax = (gridmap ? gridmap->getHeightPixels() : 0);
-	int vPos = (zeroPos ? 0 : GetVertScrollPos(hWnd));
+	int vPos = (zeroPos ? 0 : GetVertScrollPos());
 	SCROLLINFO infoVert = {
 		sizeof(SCROLLINFO), SIF_ALL, 0, vMax,
 		(UINT) rw.bottom, vPos, 0
 	};
-	SetScrollInfo(hWnd, SB_VERT, &infoVert, TRUE);
+	SetScrollInfo(hMainWnd, SB_VERT, &infoVert, TRUE);
 }
 
-void HorzScrollHandler(HWND hWnd, WPARAM wParam)
+void HorzScrollHandler(WPARAM wParam)
 {
 	// Get scrollbar info
 	SCROLLINFO info = {
 		sizeof(SCROLLINFO), SIF_ALL, 0, 0, 0, 0, 0
 	};
-	GetScrollInfo(hWnd, SB_HORZ, &info);
+	GetScrollInfo(hMainWnd, SB_HORZ, &info);
 
 	// Set new scrollbar position (via WM_HSCROLL)
 	switch (LOWORD(wParam)) {
@@ -374,17 +378,17 @@ void HorzScrollHandler(HWND hWnd, WPARAM wParam)
 			info.nPos = info.nMax;
 			break;
 	}
-	SetScrollInfo(hWnd, SB_HORZ, &info, true);
-	UpdateEntireWindow(hWnd);
+	SetScrollInfo(hMainWnd, SB_HORZ, &info, true);
+	UpdateEntireWindow();
 }
 
-void VertScrollHandler(HWND hWnd, WPARAM wParam)
+void VertScrollHandler(WPARAM wParam)
 {
 	// Get scrollbar info
 	SCROLLINFO info = {
 		sizeof(SCROLLINFO), SIF_ALL, 0, 0, 0, 0, 0
 	};
-	GetScrollInfo(hWnd, SB_VERT, &info);
+	GetScrollInfo(hMainWnd, SB_VERT, &info);
 
 	// Set new scrollbar position (via WM_VSCROLL)
 	switch (LOWORD(wParam)) {
@@ -413,11 +417,11 @@ void VertScrollHandler(HWND hWnd, WPARAM wParam)
 			info.nPos = info.nMax;
 			break;
 	}
-	SetScrollInfo(hWnd, SB_VERT, &info, true);
-	UpdateEntireWindow(hWnd);
+	SetScrollInfo(hMainWnd, SB_VERT, &info, true);
+	UpdateEntireWindow();
 }
 
-void ScrollWheelHandler(HWND hWnd, WPARAM wParam)
+void ScrollWheelHandler(WPARAM wParam)
 {
 	// Get adjustment steps
 	int wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
@@ -428,7 +432,7 @@ void ScrollWheelHandler(HWND hWnd, WPARAM wParam)
 		int newSize = GetGridSize() + steps;
 		newSize = std::min(newSize, (int) gridmap->getCellSizeMax());
 		newSize = std::max(newSize, (int) gridmap->getCellSizeMin());
-		ChangeGridSize(hWnd, newSize);
+		ChangeGridSize(newSize);
 	}
 
 	// Handle movement of scrollbars
@@ -438,72 +442,72 @@ void ScrollWheelHandler(HWND hWnd, WPARAM wParam)
 			sizeof(SCROLLINFO), SIF_ALL, 0, 0, 0, 0, 0
 		};
 		int scrollBar = wParam & MK_SHIFT ? SB_HORZ : SB_VERT;
-		GetScrollInfo(hWnd, scrollBar, &info);
+		GetScrollInfo(hMainWnd, scrollBar, &info);
 
 		// Set new scrollbar position
 		info.nPos -= steps * GetGridSize();
-		SetScrollInfo(hWnd, scrollBar, &info, true);
-		UpdateEntireWindow(hWnd);
+		SetScrollInfo(hMainWnd, scrollBar, &info, true);
+		UpdateEntireWindow();
 	}
 }
 
-unsigned GetHorzScrollPos(HWND hWnd)
+unsigned GetHorzScrollPos()
 {
 	SCROLLINFO info = {
 		sizeof(SCROLLINFO), SIF_PAGE|SIF_POS, 0, 0, 0, 0, 0
 	};
-	GetScrollInfo(hWnd, SB_HORZ, &info);
+	GetScrollInfo(hMainWnd, SB_HORZ, &info);
 	return info.nPos;
 }
 
-unsigned GetVertScrollPos(HWND hWnd)
+unsigned GetVertScrollPos()
 {
 	SCROLLINFO info = {
 		sizeof(SCROLLINFO), SIF_PAGE|SIF_POS, 0, 0, 0, 0, 0
 	};
-	GetScrollInfo(hWnd, SB_VERT, &info);
+	GetScrollInfo(hMainWnd, SB_VERT, &info);
 	return info.nPos;
 }
 
-void MyKeyHandler(HWND hWnd, WPARAM wParam)
+void MyKeyHandler(WPARAM wParam)
 {
 	switch (wParam) {
 		case VK_LEFT:
-			SendMessage(hWnd, WM_HSCROLL, SB_LINELEFT, 0);
+			SendMessage(hMainWnd, WM_HSCROLL, SB_LINELEFT, 0);
 			break;
 		case VK_RIGHT:
-			SendMessage(hWnd, WM_HSCROLL, SB_LINERIGHT, 0);
+			SendMessage(hMainWnd, WM_HSCROLL, SB_LINERIGHT, 0);
 			break;
 		case VK_UP:
-			SendMessage(hWnd, WM_VSCROLL, SB_LINEUP, 0);
+			SendMessage(hMainWnd, WM_VSCROLL, SB_LINEUP, 0);
 			break;
 		case VK_DOWN:
-			SendMessage(hWnd, WM_VSCROLL, SB_LINEDOWN, 0);
+			SendMessage(hMainWnd, WM_VSCROLL, SB_LINEDOWN, 0);
 			break;
 		case VK_PRIOR:
-			SendMessage(hWnd, WM_VSCROLL, SB_PAGEUP, 0);
+			SendMessage(hMainWnd, WM_VSCROLL, SB_PAGEUP, 0);
 			break;
 		case VK_NEXT:
-			SendMessage(hWnd, WM_VSCROLL, SB_PAGEDOWN, 0);
+			SendMessage(hMainWnd, WM_VSCROLL, SB_PAGEDOWN, 0);
 			break;
 		case VK_HOME:
-			SendMessage(hWnd, WM_HSCROLL, SB_TOP, 0);
-			SendMessage(hWnd, WM_VSCROLL, SB_TOP, 0);
+			SendMessage(hMainWnd, WM_HSCROLL, SB_TOP, 0);
+			SendMessage(hMainWnd, WM_VSCROLL, SB_TOP, 0);
 			break;
 		case VK_END:
-			SendMessage(hWnd, WM_HSCROLL, SB_BOTTOM, 0);
-			SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, 0);
+			SendMessage(hMainWnd, WM_HSCROLL, SB_BOTTOM, 0);
+			SendMessage(hMainWnd, WM_VSCROLL, SB_BOTTOM, 0);
 			break;
 	}
 }
 
-void MyPaintWindow(HWND hWnd)
+void MyPaintWindow()
 {
 	// Set up paint process
 	RECT rw;
 	PAINTSTRUCT ps;
-	GetClientRect(hWnd, &rw);
-	HDC hdc = BeginPaint(hWnd, &ps);
+	GetClientRect(hMainWnd, &rw);
+	HDC hdc = BeginPaint(hMainWnd, &ps);
 	SelectObject(hdc, GetStockObject(GRAY_BRUSH));
 	SelectObject(hdc, BkgdPen);
 
@@ -511,24 +515,24 @@ void MyPaintWindow(HWND hWnd)
 	if (gridmap) {
 		BitBlt(
 		    hdc, 0, 0, rw.right, rw.bottom, BkgdDC,
-		    GetHorzScrollPos(hWnd), GetVertScrollPos(hWnd), SRCCOPY);
-		int rightPixel = gridmap->getWidthPixels() - GetHorzScrollPos(hWnd);
-		int bottomPixel = gridmap->getHeightPixels() - GetVertScrollPos(hWnd);
+		    GetHorzScrollPos(), GetVertScrollPos(), SRCCOPY);
+		int rightPixel = gridmap->getWidthPixels() - GetHorzScrollPos();
+		int bottomPixel = gridmap->getHeightPixels() - GetVertScrollPos();
 		Rectangle(hdc, rightPixel, rw.top, rw.right, rw.bottom);
 		Rectangle(hdc, rw.left, bottomPixel, rw.right, rw.bottom);
 	}
 	else {
 		Rectangle(hdc, rw.left, rw.top, rw.right, rw.bottom);
 	}
-	EndPaint(hWnd, &ps);
+	EndPaint(hMainWnd, &ps);
 }
 
-void MyLButtonHandler(HWND hWnd, LPARAM lParam)
+void MyLButtonHandler(LPARAM lParam)
 {
 	// Extract click position
 	POINT p = {
-		(LONG)(LOWORD(lParam) + GetHorzScrollPos(hWnd)),
-		(LONG)(HIWORD(lParam) + GetVertScrollPos(hWnd))
+		(LONG)(LOWORD(lParam) + GetHorzScrollPos()),
+		(LONG)(HIWORD(lParam) + GetVertScrollPos())
 	};
 
 	// Handle if we're on map area
@@ -538,21 +542,21 @@ void MyLButtonHandler(HWND hWnd, LPARAM lParam)
 		// Place floors
 		FloorType floor = GetFloorTypeFromMenu(selectedFeature);
 		if (floor != FLOOR_FAIL) {
-			FloorSelect(hWnd, floor, p);
+			FloorSelect(floor, p);
 			return;
 		}
 
 		// Place objects
 		ObjectType object = GetObjectTypeFromMenu(selectedFeature);
 		if (object != OBJECT_FAIL) {
-			ObjectSelect(hWnd, object, p);
+			ObjectSelect(object, p);
 			return;
 		}
 
 		// Place walls
 		WallType wall = GetWallTypeFromMenu(selectedFeature);
 		if (wall != WALL_FAIL) {
-			WallSelect(hWnd, wall, p);
+			WallSelect(wall, p);
 			return;
 		}
 	}
@@ -567,31 +571,31 @@ GridCoord GetGridCoordFromWindow(POINT p)
 	};
 }
 
-void FloorSelect(HWND hWnd, FloorType floor, POINT p)
+void FloorSelect(FloorType floor, POINT p)
 {
 	GridCoord gc = GetGridCoordFromWindow(p);
 	if (gridmap->getCellFloor(gc) != floor) {
 		gridmap->setCellFloor(gc, floor);
 		if (IsFloorFillType(floor)) {
-			FillCell(hWnd, gc);
+			FillCell(gc);
 		}
 		else {
-			UpdateBkgdCell(hWnd, gc);
+			UpdateBkgdCell(gc);
 		}
 	}
 }
 
-void ObjectSelect(HWND hWnd, ObjectType object, POINT p)
+void ObjectSelect(ObjectType object, POINT p)
 {
 	GridCoord gc = GetGridCoordFromWindow(p);
 	if (gridmap->getCellFloor(gc) != FLOOR_FILL
 	        && gridmap->getCellObject(gc) != object) {
 		gridmap->setCellObject(gc, object);
-		UpdateBkgdCell(hWnd, gc);
+		UpdateBkgdCell(gc);
 	}
 }
 
-void WallSelect(HWND hWnd, WallType wall, POINT p)
+void WallSelect(WallType wall, POINT p)
 {
 	// Set click sensitivity
 	int gridSize = GetGridSize();
@@ -615,62 +619,62 @@ void WallSelect(HWND hWnd, WallType wall, POINT p)
 
 		// Change appropriate wall
 		if (dx < dy) {
-			ChangeWestWall(hWnd, gc, wall);
+			ChangeWestWall(gc, wall);
 		}
 		else {
-			ChangeNorthWall(hWnd, gc, wall);
+			ChangeNorthWall(gc, wall);
 		}
 	}
 }
 
-void ChangeWestWall(HWND hWnd, GridCoord gc, int newFeature)
+void ChangeWestWall(GridCoord gc, int newFeature)
 {
 	if (gridmap->canBuildWWall(gc)
 	        && gridmap->getCellWWall(gc) != newFeature) {
 		gridmap->setCellWWall(gc, newFeature);
-		UpdateBkgdCell(hWnd, {gc.x-1, gc.y});
-		UpdateBkgdCell(hWnd, gc);
+		UpdateBkgdCell({gc.x-1, gc.y});
+		UpdateBkgdCell(gc);
 	}
 }
 
-void ChangeNorthWall(HWND hWnd, GridCoord gc, int newFeature)
+void ChangeNorthWall(GridCoord gc, int newFeature)
 {
 	if (gridmap->canBuildNWall(gc)
 	        && gridmap->getCellNWall(gc) != newFeature) {
 		gridmap->setCellNWall(gc, newFeature);
-		UpdateBkgdCell(hWnd, {gc.x, gc.y-1});
-		UpdateBkgdCell(hWnd, gc);
+		UpdateBkgdCell({gc.x, gc.y-1});
+		UpdateBkgdCell(gc);
 	}
 }
 
-void ClearMap(HWND hWnd, bool open)
+void ClearMap(bool open)
 {
 	gridmap->clearMap(open ? FLOOR_OPEN : FLOOR_FILL);
 	gridmap->paint(BkgdDC);
-	UpdateEntireWindow(hWnd);
-	SetSelectedFeature(hWnd, open ? IDM_FLOOR_FILL : IDM_FLOOR_OPEN);
+	UpdateEntireWindow();
+	SetSelectedFeature(open ? IDM_FLOOR_FILL : IDM_FLOOR_OPEN);
 }
 
-void ToggleGridLines(HWND hWnd)
+void ToggleGridLines()
 {
 	gridmap->toggleNoGrid();
 	bool hideGrid = gridmap->displayNoGrid();
 	CheckMenuItem(
-	    GetMenu(hWnd), IDM_HIDE_GRID,
+	    GetMenu(hMainWnd), IDM_HIDE_GRID,
 	    MF_BYCOMMAND | (hideGrid ? MF_CHECKED : MF_UNCHECKED));
-	SetBkgdDC(hWnd);
-	UpdateEntireWindow(hWnd);
+	SetBkgdDC();
+	UpdateEntireWindow();
 }
 
-void ToggleRoughEdges(HWND hWnd)
+void ToggleRoughEdges()
 {
 	gridmap->toggleRoughEdges();
 	bool roughEdges = gridmap->displayRoughEdges();
 	CheckMenuItem(
-	    GetMenu(hWnd), IDM_ROUGH_EDGES,
+	    GetMenu(hMainWnd), IDM_ROUGH_EDGES,
 	    MF_BYCOMMAND | (roughEdges ? MF_CHECKED : MF_UNCHECKED));
-	SetBkgdDC(hWnd);
-	UpdateEntireWindow(hWnd);
+	SetBkgdDC();
+	UpdateEntireWindow();
 }
 
 /*
@@ -679,7 +683,7 @@ void ToggleRoughEdges(HWND hWnd)
 	Now we need to wipe out any object, wipe ineligible adjacent walls,
 	and repaint all adjacent cells.
 */
-void FillCell(HWND hWnd, GridCoord gc)
+void FillCell(GridCoord gc)
 {
 	// Get height & width
 	unsigned width = gridmap->getWidthCells();
@@ -713,7 +717,7 @@ void FillCell(HWND hWnd, GridCoord gc)
 		gridmap->paintCell({gc.x, gc.y+1}, true);
 
 	// Update window
-	UpdateEntireWindow(hWnd);
+	UpdateEntireWindow();
 }
 
 // Map a menu item to a grid map floor feature
@@ -802,10 +806,10 @@ ObjectType GetObjectTypeFromMenu(int menuID)
 //-----------------------------------------------------------------------------
 
 // Set & clear radio buttons in tools menu & submenus
-void SetSelectedFeature(HWND hWnd, int feature)
+void SetSelectedFeature(int feature)
 {
 	selectedFeature = feature;
-	HMENU hMenu = GetMenu(hWnd);
+	HMENU hMenu = GetMenu(hMainWnd);
 
 	// Main menu
 	CheckMenuRadioItem(
@@ -825,25 +829,25 @@ void SetSelectedFeature(HWND hWnd, int feature)
 	    feature, MF_BYCOMMAND);
 }
 
-bool OkDiscardChanges(HWND hWnd)
+bool OkDiscardChanges()
 {
 	if (!gridmap->isChanged())
 		return true;
 	int retval =
 	    MessageBox(
-	        hWnd, "Okay to discard changes made to map?",
+	        hMainWnd, "Okay to discard changes made to map?",
 	        "Discard Changes", MB_OKCANCEL | MB_ICONWARNING);
 	return (retval == IDOK);
 }
 
-void SetBkgdDC(HWND hWnd)
+void SetBkgdDC()
 {
 	DeleteObject(BkgdDC);
 	DeleteObject(BkgdBitmap);
-	BkgdDC = CreateCompatibleDC(GetDC(hWnd));
+	BkgdDC = CreateCompatibleDC(GetDC(hMainWnd));
 	BkgdBitmap =
 	    CreateCompatibleBitmap(
-	        GetDC(hWnd),
+	        GetDC(hMainWnd),
 	        gridmap->getWidthPixels(),
 	        gridmap->getHeightPixels());
 	if (BkgdBitmap) {
@@ -852,60 +856,60 @@ void SetBkgdDC(HWND hWnd)
 	}
 	else {
 		MessageBox(
-		    hWnd, "Could not create large enough bitmap."
+		    hMainWnd, "Could not create large enough bitmap."
 		    "\nMap will not display; try smaller grid size?",
 		    "Map Too Large", MB_OK|MB_ICONERROR);
 	}
 }
 
-void ChangeGridSize(HWND hWnd, int size)
+void ChangeGridSize(int size)
 {
 	gridmap->setCellSizePixels(size);
-	SetBkgdDC(hWnd);
-	SetScrollRange(hWnd, true);
-	UpdateEntireWindow(hWnd);
+	SetBkgdDC();
+	SetScrollRange(true);
+	UpdateEntireWindow();
 }
 
-void SetNewMap(HWND hWnd, GridMap *newmap)
+void SetNewMap(GridMap *newmap)
 {
 	if (gridmap) {
 		delete gridmap;
 	}
 	gridmap = newmap;
-	SetBkgdDC(hWnd);
-	SetScrollRange(hWnd, true);
-	UpdateEntireWindow(hWnd);
+	SetBkgdDC();
+	SetScrollRange(true);
+	UpdateEntireWindow();
 
 	// Set menu selections
-	HMENU hMenu = GetMenu(hWnd);
-	SetSelectedFeature(hWnd, IDM_FLOOR_OPEN);
+	HMENU hMenu = GetMenu(hMainWnd);
+	SetSelectedFeature(IDM_FLOOR_OPEN);
 	CheckMenuItem(hMenu, IDM_HIDE_GRID, MF_BYCOMMAND |
 	              (gridmap->displayNoGrid() ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(hMenu, IDM_ROUGH_EDGES, MF_BYCOMMAND |
 	              (gridmap->displayRoughEdges() ? MF_CHECKED : MF_UNCHECKED));
 }
 
-bool NewMapFromSpecs(HWND hWnd, int newWidth, int newHeight)
+bool NewMapFromSpecs(int newWidth, int newHeight)
 {
 	GridMap *newmap = new GridMap(newWidth, newHeight);
 	if (!newmap) {
 		MessageBox(
-		    hWnd, "Could not create new map.", "Error",
+		    hMainWnd, "Could not create new map.", "Error",
 		    MB_OK|MB_ICONERROR);
 		return false;
 	}
 	else {
-		SetNewMap(hWnd, newmap);
+		SetNewMap(newmap);
 		return true;
 	}
 }
 
-bool NewMapFromFile(HWND hWnd, char *filename)
+bool NewMapFromFile(char *filename)
 {
 	GridMap *newmap = new GridMap(filename);
 	if (!newmap) {
 		MessageBox(
-		    hWnd, "Could not create new map.", "Error",
+		    hMainWnd, "Could not create new map.", "Error",
 		    MB_OK|MB_ICONERROR);
 		return false;
 	}
@@ -914,58 +918,58 @@ bool NewMapFromFile(HWND hWnd, char *filename)
 		sprintf_s(
 		    msg, sizeof(msg), "Could not read map file:\n%s", filename);
 		MessageBox(
-		    hWnd, msg, "Error", MB_OK|MB_ICONERROR);
+		    hMainWnd, msg, "Error", MB_OK|MB_ICONERROR);
 		delete newmap;
 		return false;
 	}
 	else {
-		SetNewMap(hWnd, newmap);
+		SetNewMap(newmap);
 		return true;
 	}
 }
 
-void OpenMap(HWND hWnd)
+void OpenMap()
 {
 	char filename[GRID_FILENAME_MAX] = "\0";
 	OPENFILENAME info = {
-		sizeof(OPENFILENAME), hWnd, 0,
+		sizeof(OPENFILENAME), hMainWnd, 0,
 		FileFilterStr, 0, 0, 0, filename, GRID_FILENAME_MAX,
 		0, 0, 0, 0, 0, 0, 0, DefaultFileExt, 0, 0, 0
 	};
 	if (GetOpenFileName(&info))
-		NewMapFromFile(hWnd, filename);
+		NewMapFromFile(filename);
 }
 
-void SaveMapAs(HWND hWnd)
+void SaveMapAs()
 {
 	char filename[GRID_FILENAME_MAX] = "\0";
 	OPENFILENAME info = {
-		sizeof(OPENFILENAME), hWnd, 0,
+		sizeof(OPENFILENAME), hMainWnd, 0,
 		FileFilterStr, 0, 0, 0, filename, GRID_FILENAME_MAX,
 		0, 0, 0, 0, OFN_OVERWRITEPROMPT, 0, 0, DefaultFileExt,
 		0, 0, 0
 	};
 	if (GetSaveFileName(&info)) {
 		gridmap->setFilename(filename);
-		SaveMap(hWnd);
+		SaveMap();
 	}
 }
 
-void SaveMap(HWND hWnd)
+void SaveMap()
 {
 	if (strlen(gridmap->getFilename()))
 		gridmap->save();
 	else
-		SaveMapAs(hWnd);
+		SaveMapAs();
 }
 
-void CopyMap(HWND hWnd)
+void CopyMap()
 {
 	// Create bitmap with map image
-	HDC tempDC = CreateCompatibleDC(GetDC(hWnd));
+	HDC tempDC = CreateCompatibleDC(GetDC(hMainWnd));
 	HBITMAP hBitmap =
 	    CreateCompatibleBitmap(
-	        GetDC(hWnd),
+	        GetDC(hMainWnd),
 	        gridmap->getWidthPixels(), gridmap->getHeightPixels());
 	SelectObject(tempDC, hBitmap);
 	BitBlt(
@@ -973,7 +977,7 @@ void CopyMap(HWND hWnd)
 	    gridmap->getHeightPixels(), BkgdDC, 0, 0, SRCCOPY);
 
 	// Put it on the clipboard
-	OpenClipboard(hWnd);
+	OpenClipboard(hMainWnd);
 	EmptyClipboard();
 	SetClipboardData(CF_BITMAP, hBitmap);
 	CloseClipboard();
@@ -982,11 +986,11 @@ void CopyMap(HWND hWnd)
 	DeleteDC(tempDC);
 }
 
-void PrintMap(HWND hWnd)
+void PrintMap()
 {
 	// Call print dialog
 	PRINTDLG pd = {
-		sizeof(PRINTDLG), hWnd, 0, 0, 0,
+		sizeof(PRINTDLG), hMainWnd, 0, 0, 0,
 		PD_RETURNDC, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	};
 	if (PrintDlg(&pd)) {
@@ -1068,7 +1072,6 @@ LRESULT CALLBACK NewDialog(
 			int retval = LOWORD(wParam);
 			if (retval == IDOK) {
 				NewMapFromSpecs(
-				    GetWindow(hDlg, GW_OWNER),
 				    GetDlgItemInt(hDlg, IDC_NEW_WIDTH, NULL, FALSE),
 				    GetDlgItemInt(hDlg, IDC_NEW_HEIGHT, NULL, FALSE));
 				EndDialog(hDlg, LOWORD(wParam));
@@ -1128,7 +1131,7 @@ LRESULT CALLBACK GridSizeDialog(
 
 				// Handle acceptable size
 				else {
-					ChangeGridSize(GetWindow(hDlg, GW_OWNER), newSize);
+					ChangeGridSize(newSize);
 					EndDialog(hDlg, LOWORD(wParam));
 				}
 				return TRUE;
