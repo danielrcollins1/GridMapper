@@ -543,7 +543,10 @@ void MyLButtonHandler(HWND hWnd, LPARAM lParam)
 GridCoord GetGridCoordFromWindow(POINT p)
 {
 	int gridSize = GetGridSize();
-	return {(unsigned)(p.x / gridSize), (unsigned)(p.y / gridSize)};
+	return {
+		(unsigned)(p.x / gridSize),
+		(unsigned)(p.y / gridSize)
+	};
 }
 
 void FloorSelect(HWND hWnd, FloorType floor, POINT p)
@@ -577,20 +580,16 @@ void WallSelect(HWND hWnd, WallType wall, POINT p)
 	int INC = gridSize / 3;
 
 	// Figure out what cell we're near
-	int xAdjust = p.x + INC;
-	int yAdjust = p.y + INC;
-	GridCoord gc = {
-		(unsigned)(xAdjust / gridSize),
-		(unsigned)(yAdjust / gridSize)
-	};
+	POINT adjusted = {p.x + INC, p.y + INC};
+	GridCoord gc = GetGridCoordFromWindow(adjusted);
 
 	// Handle if we're on map area
 	if (gc.x < gridmap->getWidthCells()
 	        && gc.y < gridmap->getHeightCells()) {
 
 		// Find distance to nearby walls
-		int dx = xAdjust % gridSize;
-		int dy = yAdjust % gridSize;
+		int dx = adjusted.x % gridSize;
+		int dy = adjusted.y % gridSize;
 
 		// Abort if not far from edge nor close to vertex
 		if (dx >= INC*2 && dy >= INC*2) return;
