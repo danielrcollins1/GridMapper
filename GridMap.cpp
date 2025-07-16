@@ -969,6 +969,38 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		SelectObject(hDC, hOldFont);
 		DeleteObject(hFont);
 	}
+
+	// Stalagmite (circle with partial spokes, random location)
+	if (object == OBJECT_STALAGMITE) {
+
+		double circleFraction = 0.30 + 0.01 * (rand() % 20);
+		int circleDiameter = (int)(cellSize * circleFraction);
+		int radius = circleDiameter / 2;
+
+		// Clamp random position to stay inside square
+		int maxOffset = cellSize - circleDiameter;
+		int pctx = rand() % 100;
+		int pcty = rand() % 100;
+		int randX = p.x + pctx * maxOffset / 100;
+		int randY = p.y + pcty * maxOffset / 100;
+		int cx = randX + radius;
+		int cy = randY + radius;
+
+		// Draw the filled circle
+		Ellipse(hDC, cx - radius, cy - radius, cx + radius, cy + radius);
+
+		// Draw partial spokes
+		const int numLines = 4;
+		for (int i = 0; i < numLines; ++i) {
+			double angle = i * (TAU / numLines);
+			int xOuter = cx + (int)(radius * cos(angle));
+			int yOuter = cy + (int)(radius * sin(angle));
+			int xInner = cx + (int)((radius / 2.0) * cos(angle));
+			int yInner = cy + (int)((radius / 2.0) * sin(angle));
+			MoveToEx(hDC, xOuter, yOuter, NULL);
+			LineTo(hDC, xInner, yInner);
+		}
+	}
 }
 
 // Get a random float between -1 and +1
