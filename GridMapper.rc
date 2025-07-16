@@ -85,6 +85,7 @@ BEGIN
             MENUITEM "Trapdoor",                    IDM_OBJECT_TRAPDOOR
             MENUITEM "Pit",                         IDM_OBJECT_PIT
             MENUITEM "Rubble",                      IDM_OBJECT_RUBBLE
+            MENUITEM "X-Mark",                      IDM_OBJECT_XMARK
             MENUITEM "Clear",                       IDM_OBJECT_CLEAR
         END
         

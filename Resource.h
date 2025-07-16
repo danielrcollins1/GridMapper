@@ -67,6 +67,7 @@
 #define IDM_OBJECT_STATUE               604
 #define IDM_OBJECT_TRAPDOOR             605
 #define IDM_OBJECT_PIT                  606
+#define IDM_OBJECT_XMARK                607
 #define END_OBJECT_TOOLS                699
 
 #define IDC_STATIC                      -1

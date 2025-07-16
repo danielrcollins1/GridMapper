@@ -934,6 +934,41 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		SelectObject(hDC, hOldFont);
 		DeleteObject(hFont);
 	}
+
+	// X-Mark (character "X" in center of square)
+	if (object == OBJECT_XMARK) {
+
+		int fontHeight = (int)(cellSize * 0.65);
+
+		// Create font
+		HFONT hFont =
+		    CreateFont(
+		        -fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+		        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+		        DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Segoe UI")
+		    );
+		HFONT hOldFont = (HFONT)SelectObject(hDC, hFont);
+
+		// Set alignment and background mode
+		SetTextAlign(hDC, TA_CENTER);
+		SetBkMode(hDC, TRANSPARENT);
+
+		// Get text metrics
+		TEXTMETRIC tm;
+		GetTextMetrics(hDC, &tm);
+		int textHeight = tm.tmHeight;
+
+		// Compute center of square
+		int centerX = p.x + cellSize / 2;
+		int centerY = p.y + cellSize / 2 - textHeight / 2;
+
+		// Draw the character
+		TextOut(hDC, centerX, centerY, TEXT("X"), 1);
+
+		// Cleanup
+		SelectObject(hDC, hOldFont);
+		DeleteObject(hFont);
+	}
 }
 
 // Get a random float between -1 and +1
@@ -1175,7 +1210,7 @@ void GridMap::drawDiagonalFillRough(HDC hDC, POINT p, FloorType floor)
 	std::vector<POINT> shape;
 	shape.push_back(start);
 	generateFractalCurveRecursive(
-		start, end, shape, cellSize * DISPLACEMENT_SCALE, RECURSION_LIMIT);
+	    start, end, shape, cellSize * DISPLACEMENT_SCALE, RECURSION_LIMIT);
 	shape.push_back(extraVertex);
 	shape.push_back(start);
 

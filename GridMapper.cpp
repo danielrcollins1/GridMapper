@@ -770,6 +770,8 @@ ObjectType GetObjectTypeFromMenu(int menuID)
 			return OBJECT_TRAPDOOR;
 		case IDM_OBJECT_PIT:
 			return OBJECT_PIT;
+		case IDM_OBJECT_XMARK:
+			return OBJECT_XMARK;
 		default:
 			return OBJECT_FAIL;
 	}
