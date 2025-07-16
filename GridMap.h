@@ -124,24 +124,24 @@ class GridMap {
 	private:
 
 		// Painting helper functions
-		void paintCellFloor(HDC hDC, POINT p, FloorType floor);
-		void paintCellObject(HDC hDC, POINT p, ObjectType object);
-		void paintCellNWall(HDC hDC, POINT p, WallType wall);
-		void paintCellWWall(HDC hDC, POINT p, WallType wall);
-		void LetterS(HDC hDC, POINT p);
 		unsigned cellHash(GridCoord gc) const;
+		void paintCellFloor(POINT p, FloorType floor);
+		void paintCellObject(POINT p, ObjectType object);
+		void paintCellNWall(POINT p, WallType wall);
+		void paintCellWWall(POINT p, WallType wall);
+		void drawSecretDoor(POINT p);
 		void makeStandardPens();
 
 		// Rough-edge painting functions
 		double randomUnit() const;
 		bool isExposedEdge(GridCoord gc, Direction dir) const;
 		void getVertexPoints(POINT p, POINT& a, POINT& b, Direction dir) const;
-		void drawFillSpaceRough(HDC hDC, POINT p);
-		void drawFillQuadrant(HDC hDC, POINT p, Direction dir);
-		void drawFillQuadrantSmooth(HDC hDC, POINT p, Direction dir);
-		void drawFillQuadrantRough(HDC hDC, POINT p, Direction dir);
-		void drawDiagonalFillSmooth(HDC hDC, POINT p, FloorType floor);
-		void drawDiagonalFillRough(HDC hDC, POINT p, FloorType floor);
+		void drawFillSpaceRough(POINT p);
+		void drawFillQuadrant(POINT p, Direction dir);
+		void drawFillQuadrantSmooth(POINT p, Direction dir);
+		void drawFillQuadrantRough(POINT p, Direction dir);
+		void drawDiagonalFillSmooth(POINT p, FloorType floor);
+		void drawDiagonalFillRough(POINT p, FloorType floor);
 		void generateFractalCurveRecursive(
 		    POINT start, POINT end, std::vector<POINT>& path,
 		    double displacement, int depthToGo);

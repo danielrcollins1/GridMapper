@@ -451,7 +451,7 @@ void GridMap::paint(HDC hDC)
 /*
 	Paint one cell on device context
 
-	Assumes we've previously called paint() to store hMainDC
+	Assumes we've previously called paint() to store hMainDC.
 
 	NOTE ON RECURSION:
 	Recursion here handles rough edges bleeding into neighbor spaces.
@@ -478,20 +478,22 @@ void GridMap::paintCell(
 	// Paint everything controlled by this cell
 	int cellSize = getCellSizePixels();
 	POINT p = {(LONG)(gc.x * cellSize), (LONG)(gc.y * cellSize)};
-	paintCellFloor(hMainDC, p, getCellFloor(gc));
-	paintCellObject(hMainDC, p, getCellObject(gc));
-	paintCellNWall(hMainDC, p, getCellNWall(gc));
-	paintCellWWall(hMainDC, p, getCellWWall(gc));
+	paintCellFloor(p, getCellFloor(gc));
+	paintCellObject(p, getCellObject(gc));
+	paintCellNWall(p, getCellNWall(gc));
+	paintCellWWall(p, getCellWWall(gc));
 
 	// Repaint walls east & south if needed
 	if (partialRepaint) {
 		if (gc.x+1 < width) {
 			paintCellWWall(
-			    hMainDC, {p.x + cellSize, p.y}, getCellWWall({gc.x+1, gc.y}));
+			    {p.x + cellSize, p.y}, 
+				getCellWWall({gc.x+1, gc.y}));
 		}
 		if (gc.y+1 < height) {
 			paintCellNWall(
-			    hMainDC, {p.x, p.y + cellSize}, getCellNWall({gc.x, gc.y+1}));
+			    {p.x, p.y + cellSize}, 
+				getCellNWall({gc.x, gc.y+1}));
 		}
 	}
 
@@ -513,31 +515,31 @@ void GridMap::paintCell(
 }
 
 // Paint one cell's floor
-void GridMap::paintCellFloor(HDC hDC, POINT p, FloorType floor)
+void GridMap::paintCellFloor(POINT p, FloorType floor)
 {
 	int cellSize = getCellSizePixels();
 
 	// If we're a filled cell with no rough edges,
 	// then simply paint a black rectangle and return
 	if (floor == FLOOR_FILL && !displayRoughEdges()) {
-		SelectObject(hDC, GetStockObject(BLACK_PEN));
-		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-		Rectangle(hDC, p.x, p.y, p.x + cellSize, p.y + cellSize);
+		SelectObject(hMainDC, GetStockObject(BLACK_PEN));
+		SelectObject(hMainDC, GetStockObject(BLACK_BRUSH));
+		Rectangle(hMainDC, p.x, p.y, p.x + cellSize, p.y + cellSize);
 		return;
 	}
 
 	// Paint a white rectangle as background
-	SelectObject(hDC, GetStockObject(WHITE_PEN));
-	SelectObject(hDC, GetStockObject(WHITE_BRUSH));
-	Rectangle(hDC, p.x, p.y, p.x + cellSize, p.y + cellSize);
+	SelectObject(hMainDC, GetStockObject(WHITE_PEN));
+	SelectObject(hMainDC, GetStockObject(WHITE_BRUSH));
+	Rectangle(hMainDC, p.x, p.y, p.x + cellSize, p.y + cellSize);
 
 	// Set pen for other features
-	SelectObject(hDC, GetStockObject(BLACK_PEN));
+	SelectObject(hMainDC, GetStockObject(BLACK_PEN));
 
 	// Draw a filled space with rough edges
 	if (floor == FLOOR_FILL) {
 		assert(displayRoughEdges());
-		drawFillSpaceRough(hDC, p);
+		drawFillSpaceRough(p);
 	}
 
 	// Stairs (series of parallel lines)
@@ -546,34 +548,34 @@ void GridMap::paintCellFloor(HDC hDC, POINT p, FloorType floor)
 		for (int s = 0; s <= stairsPerSquare; s++) {
 			int d = s * cellSize / stairsPerSquare;
 			if (floor == FLOOR_NSTAIRS) {
-				MoveToEx(hDC, p.x, p.y + d, NULL);
-				LineTo(hDC, p.x + cellSize, p.y + d);
+				MoveToEx(hMainDC, p.x, p.y + d, NULL);
+				LineTo(hMainDC, p.x + cellSize, p.y + d);
 			}
 			else {
-				MoveToEx(hDC, p.x + d, p.y, NULL);
-				LineTo(hDC, p.x + d, p.y + cellSize);
+				MoveToEx(hMainDC, p.x + d, p.y, NULL);
+				LineTo(hMainDC, p.x + d, p.y + cellSize);
 			}
 		}
 	}
 
 	// Diagonal Wall NW/SE
 	if (floor == FLOOR_NWWALL || floor == FLOOR_NWDOOR) {
-		SelectObject(hDC, ThickBlackPen);
-		MoveToEx(hDC, p.x, p.y, NULL);
-		LineTo(hDC, p.x + cellSize, p.y + cellSize);
+		SelectObject(hMainDC, ThickBlackPen);
+		MoveToEx(hMainDC, p.x, p.y, NULL);
+		LineTo(hMainDC, p.x + cellSize, p.y + cellSize);
 	}
 
 	// Diagonal Wall NE/SW
 	if (floor == FLOOR_NEWALL || floor == FLOOR_NEDOOR) {
-		SelectObject(hDC, ThickBlackPen);
-		MoveToEx(hDC, p.x + cellSize, p.y, NULL);
-		LineTo(hDC, p.x, p.y + cellSize);
+		SelectObject(hMainDC, ThickBlackPen);
+		MoveToEx(hMainDC, p.x + cellSize, p.y, NULL);
+		LineTo(hMainDC, p.x, p.y + cellSize);
 	}
 
 	// Diagonal Door (diamond in square center)
 	if (floor == FLOOR_NEDOOR || floor == FLOOR_NWDOOR) {
-		SelectObject(hDC, GetStockObject(BLACK_PEN));
-		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
+		SelectObject(hMainDC, GetStockObject(BLACK_PEN));
+		SelectObject(hMainDC, GetStockObject(WHITE_BRUSH));
 
 		// Find cell center & door corners
 		int halfCell = cellSize / 2;
@@ -588,16 +590,16 @@ void GridMap::paintCellFloor(HDC hDC, POINT p, FloorType floor)
 			{cx + offset, cy},
 			{cx, cy - offset}
 		};
-		Polygon(hDC, pts, 4);
+		Polygon(hMainDC, pts, 4);
 	}
 
 	// Diagonal half-filled space
 	if (IsFloorDiagonalFill(floor)) {
 		if (displayRoughEdges()) {
-			drawDiagonalFillRough(hDC, p, floor);
+			drawDiagonalFillRough(p, floor);
 		}
 		else {
-			drawDiagonalFillSmooth(hDC, p, floor);
+			drawDiagonalFillSmooth(p, floor);
 		}
 	}
 
@@ -627,12 +629,12 @@ void GridMap::paintCellFloor(HDC hDC, POINT p, FloorType floor)
 		int yEnd   = cy - (int)(radius * sin(arcEndAngle));
 
 		// Draw main circle with arc missing
-		Arc(hDC, left, top, right, bottom, xStart, yStart, xEnd, yEnd);
+		Arc(hMainDC, left, top, right, bottom, xStart, yStart, xEnd, yEnd);
 
 		// Draw center circle (percent of outer radius)
 		int innerRadius = (int)(radius * 0.20);
-		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-		Ellipse(hDC,
+		SelectObject(hMainDC, GetStockObject(BLACK_BRUSH));
+		Ellipse(hMainDC,
 		        cx - innerRadius, cy - innerRadius,
 		        cx + innerRadius, cy + innerRadius);
 
@@ -646,8 +648,8 @@ void GridMap::paintCellFloor(HDC hDC, POINT p, FloorType floor)
 			double angle = arcStartAngle + anglePerSpoke * i;
 			int xOuter = cx + (int)(radius * cos(angle));
 			int yOuter = cy - (int)(radius * sin(angle));
-			MoveToEx(hDC, cx, cy, nullptr);
-			LineTo(hDC, xOuter, yOuter);
+			MoveToEx(hMainDC, cx, cy, nullptr);
+			LineTo(hMainDC, xOuter, yOuter);
 		}
 	}
 
@@ -664,8 +666,8 @@ void GridMap::paintCellFloor(HDC hDC, POINT p, FloorType floor)
 			int startY = p.y + max(0, -offset);
 			int endX = p.x + min(cellSize, cellSize + offset);
 			int endY = p.y + min(cellSize, cellSize - offset);
-			MoveToEx(hDC, startX, startY, NULL);
-			LineTo(hDC, endX, endY);
+			MoveToEx(hMainDC, startX, startY, NULL);
+			LineTo(hMainDC, endX, endY);
 		}
 
 		// Draw lines from top-right to bottom-left
@@ -674,96 +676,95 @@ void GridMap::paintCellFloor(HDC hDC, POINT p, FloorType floor)
 			int startY = p.y + max(0, offset - cellSize);
 			int endX = p.x + max(0, offset - cellSize);
 			int endY = p.y + min(cellSize, offset);
-			MoveToEx(hDC, startX, startY, NULL);
-			LineTo(hDC, endX, endY);
+			MoveToEx(hMainDC, startX, startY, NULL);
+			LineTo(hMainDC, endX, endY);
 		}
 	}
 }
 
 // Paint one cell's north wall
-void GridMap::paintCellNWall(HDC hDC, POINT p, WallType wall)
+void GridMap::paintCellNWall(POINT p, WallType wall)
 {
 	int cellSize = getCellSizePixels();
 
 	// Paint grid line as needed
 	if (wall != WALL_OPEN) {
-		SelectObject(hDC, ThickBlackPen);
-		MoveToEx(hDC, p.x, p.y, NULL);
-		LineTo(hDC, p.x + cellSize, p.y);
+		SelectObject(hMainDC, ThickBlackPen);
+		MoveToEx(hMainDC, p.x, p.y, NULL);
+		LineTo(hMainDC, p.x + cellSize, p.y);
 	}
 	else if (!displayNoGrid()) {
-		SelectObject(hDC, ThinGrayPen);
-		MoveToEx(hDC, p.x, p.y, NULL);
-		LineTo(hDC, p.x + cellSize, p.y);
+		SelectObject(hMainDC, ThinGrayPen);
+		MoveToEx(hMainDC, p.x, p.y, NULL);
+		LineTo(hMainDC, p.x + cellSize, p.y);
 	}
 
 	// Set door size, pen, brush
 	int h = cellSize / 4; // half door size
-	SelectObject(hDC, GetStockObject(BLACK_PEN));
-	SelectObject(hDC, GetStockObject(WHITE_BRUSH));
+	SelectObject(hMainDC, GetStockObject(BLACK_PEN));
+	SelectObject(hMainDC, GetStockObject(WHITE_BRUSH));
 
 	// Single door
 	if (wall == WALL_SINGLE_DOOR) {
-		Rectangle(hDC, p.x+h+1, p.y-h+1, p.x+3*h, p.y+h);
+		Rectangle(hMainDC, p.x+h+1, p.y-h+1, p.x+3*h, p.y+h);
 	}
 
 	// Double door
 	if (wall == WALL_DOUBLE_DOOR) {
-		Rectangle(hDC, p.x+2, p.y-h+1, p.x+2*h+1, p.y+h);
-		Rectangle(hDC, p.x+2*h, p.y-h+1, p.x+4*h-1, p.y+h);
+		Rectangle(hMainDC, p.x+2, p.y-h+1, p.x+2*h+1, p.y+h);
+		Rectangle(hMainDC, p.x+2*h, p.y-h+1, p.x+4*h-1, p.y+h);
 	}
 
 	// Secret door
 	if (wall == WALL_SECRET_DOOR) {
-		LetterS(hDC, {p.x+h*2, p.y+1});
+		drawSecretDoor({p.x+h*2, p.y+1});
 	}
 }
 
 // Paint one cell's west wall
-void GridMap::paintCellWWall(HDC hDC, POINT p, WallType wall)
+void GridMap::paintCellWWall(POINT p, WallType wall)
 {
 	int cellSize = getCellSizePixels();
 
 	// Paint grid line as needed
 	if (wall != WALL_OPEN) {
-		SelectObject(hDC, ThickBlackPen);
-		MoveToEx(hDC, p.x, p.y, NULL);
-		LineTo(hDC, p.x, p.y + cellSize);
+		SelectObject(hMainDC, ThickBlackPen);
+		MoveToEx(hMainDC, p.x, p.y, NULL);
+		LineTo(hMainDC, p.x, p.y + cellSize);
 	}
 	else if (!displayNoGrid()) {
-		SelectObject(hDC, ThinGrayPen);
-		MoveToEx(hDC, p.x, p.y, NULL);
-		LineTo(hDC, p.x, p.y + cellSize);
+		SelectObject(hMainDC, ThinGrayPen);
+		MoveToEx(hMainDC, p.x, p.y, NULL);
+		LineTo(hMainDC, p.x, p.y + cellSize);
 	}
 
 	// Set door size, pen, brush
 	int h = cellSize / 4; // half door size
-	SelectObject(hDC, GetStockObject(BLACK_PEN));
-	SelectObject(hDC, GetStockObject(WHITE_BRUSH));
+	SelectObject(hMainDC, GetStockObject(BLACK_PEN));
+	SelectObject(hMainDC, GetStockObject(WHITE_BRUSH));
 
 	// Single door
 	if (wall == WALL_SINGLE_DOOR) {
-		Rectangle(hDC, p.x-h+1, p.y+h+1, p.x+h, p.y+3*h);
+		Rectangle(hMainDC, p.x-h+1, p.y+h+1, p.x+h, p.y+3*h);
 	}
 
 	// Double door
 	if (wall == WALL_DOUBLE_DOOR) {
-		Rectangle(hDC, p.x-h+1, p.y+2, p.x+h, p.y+2*h+1);
-		Rectangle(hDC, p.x-h+1, p.y+2*h, p.x+h, p.y+4*h-1);
+		Rectangle(hMainDC, p.x-h+1, p.y+2, p.x+h, p.y+2*h+1);
+		Rectangle(hMainDC, p.x-h+1, p.y+2*h, p.x+h, p.y+4*h-1);
 	}
 
 	// Secret door
 	if (wall == WALL_SECRET_DOOR) {
-		LetterS(hDC, {p.x, p.y+h*2+1});
+		drawSecretDoor({p.x, p.y+h*2+1});
 	}
 }
 
 /*
-	Paint letter 'S' centered at point p
-	Represents a secret door
+	Draw secret door (letter 'S') centered at point p
 	Also paints background behind letter
 */
-void GridMap::LetterS(HDC hDC, POINT p)
+void GridMap::drawSecretDoor(POINT p)
 {
 	int fontHeight = (int)(getCellSizePixels() * 0.70);
 
@@ -774,31 +775,31 @@ void GridMap::LetterS(HDC hDC, POINT p)
 	        ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
 	        DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial")
 	    );
-	HFONT hOldFont = (HFONT) SelectObject(hDC, hFont);
+	HFONT hOldFont = (HFONT) SelectObject(hMainDC, hFont);
 
 	// Measure actual text size
 	SIZE textSize;
-	GetTextExtentPoint32(hDC, TEXT("S"), 1, &textSize);
+	GetTextExtentPoint32(hMainDC, TEXT("S"), 1, &textSize);
 
 	// Compute top-left of text to center it at (x, y)
 	int textX = p.x - textSize.cx / 2;
 	int textY = p.y - textSize.cy / 2;
 
 	// Draw the letter "S"
-	SetBkMode(hDC, OPAQUE);
-	SetTextAlign(hDC, TA_LEFT | TA_TOP);
-	TextOut(hDC, textX, textY, TEXT("S"), 1);
+	SetBkMode(hMainDC, OPAQUE);
+	SetTextAlign(hMainDC, TA_LEFT | TA_TOP);
+	TextOut(hMainDC, textX, textY, TEXT("S"), 1);
 
 	// Clean up
-	SelectObject(hDC, hOldFont);
+	SelectObject(hMainDC, hOldFont);
 	DeleteObject(hFont);
 }
 
 // Paint one cell's object
-void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
+void GridMap::paintCellObject(POINT p, ObjectType object)
 {
 	int cellSize = getCellSizePixels();
-	SelectObject(hDC, GetStockObject(BLACK_PEN));
+	SelectObject(hMainDC, GetStockObject(BLACK_PEN));
 
 	// Pillar object (black circle)
 	if (object == OBJECT_PILLAR) {
@@ -806,8 +807,8 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		int cx = p.x + halfCell;
 		int cy = p.y + halfCell;
 		int radius = (int)(halfCell * 0.50);
-		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-		Ellipse(hDC, cx - radius, cy - radius, cx + radius, cy + radius);
+		SelectObject(hMainDC, GetStockObject(BLACK_BRUSH));
+		Ellipse(hMainDC, cx - radius, cy - radius, cx + radius, cy + radius);
 	}
 
 	// Statue object (circle with 5-pointed star inside)
@@ -821,8 +822,8 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		int radius = (int)(halfCell * 0.70);
 
 		// Draw the circle
-		SelectObject(hDC, GetStockObject(WHITE_BRUSH));
-		Ellipse(hDC, cx - radius, cy - radius, cx + radius, cy + radius);
+		SelectObject(hMainDC, GetStockObject(WHITE_BRUSH));
+		Ellipse(hMainDC, cx - radius, cy - radius, cx + radius, cy + radius);
 
 		// Get parameters for 10 points (outer and inner vertices)
 		int outerR = radius;
@@ -840,8 +841,8 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		}
 
 		// Fill the star
-		SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-		Polygon(hDC, starPts, 10);
+		SelectObject(hMainDC, GetStockObject(BLACK_BRUSH));
+		Polygon(hMainDC, starPts, 10);
 	}
 
 	// Trapdoor object (square with "T" inside)
@@ -852,13 +853,13 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		int innerY = p.y + (cellSize - innerSize) / 2;
 
 		// Draw the inner square
-		SelectObject(hDC, GetStockObject(NULL_BRUSH));
-		Rectangle(hDC, innerX, innerY,
+		SelectObject(hMainDC, GetStockObject(NULL_BRUSH));
+		Rectangle(hMainDC, innerX, innerY,
 		          innerX + innerSize, innerY + innerSize);
 
 		// Set text alignment and background mode
-		SetBkMode(hDC, TRANSPARENT);
-		SetTextAlign(hDC, TA_CENTER | TA_BASELINE);
+		SetBkMode(hMainDC, TRANSPARENT);
+		SetTextAlign(hMainDC, TA_CENTER | TA_BASELINE);
 
 		// Create font scaled to 80% of inner square
 		int fontHeight = (int)(innerSize * ratio);
@@ -871,15 +872,15 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		        DEFAULT_PITCH | FF_SWISS,
 		        TEXT("Arial")
 		    );
-		HFONT hOldFont = (HFONT)SelectObject(hDC, hFont);
+		HFONT hOldFont = (HFONT)SelectObject(hMainDC, hFont);
 
 		// Draw the "T" centered in the inner square
 		int textX = innerX + innerSize / 2;
 		int textY = innerY + innerSize / 2 + (int)(fontHeight * 0.43);
-		TextOut(hDC, textX, textY, TEXT("T"), 1);
+		TextOut(hMainDC, textX, textY, TEXT("T"), 1);
 
 		// Cleanup
-		SelectObject(hDC, hOldFont);
+		SelectObject(hMainDC, hOldFont);
 		DeleteObject(hFont);
 	}
 
@@ -892,16 +893,17 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		int innerY = p.y + (cellSize - innerSize) / 2;
 
 		// Draw the square outline
-		SelectObject(hDC, GetStockObject(NULL_BRUSH));
-		Rectangle(hDC, innerX, innerY, innerX + innerSize, innerY + innerSize);
+		SelectObject(hMainDC, GetStockObject(NULL_BRUSH));
+		Rectangle(
+			hMainDC, innerX, innerY, innerX + innerSize, innerY + innerSize);
 
 		// Top-left to bottom-right diagonal
-		MoveToEx(hDC, innerX, innerY, nullptr);
-		LineTo(hDC, innerX + innerSize, innerY + innerSize);
+		MoveToEx(hMainDC, innerX, innerY, nullptr);
+		LineTo(hMainDC, innerX + innerSize, innerY + innerSize);
 
 		// Top-right to bottom-left diagonal
-		MoveToEx(hDC, innerX + innerSize, innerY, nullptr);
-		LineTo(hDC, innerX, innerY + innerSize);
+		MoveToEx(hMainDC, innerX + innerSize, innerY, nullptr);
+		LineTo(hMainDC, innerX, innerY + innerSize);
 	}
 
 	// Rubble texture (bunch of random "x" characters)
@@ -916,15 +918,15 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
 		        DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Consolas")
 		    );
-		HFONT hOldFont = (HFONT)SelectObject(hDC, hFont);
+		HFONT hOldFont = (HFONT)SelectObject(hMainDC, hFont);
 
 		// Measure actual text size
 		SIZE textSize;
-		GetTextExtentPoint32(hDC, TEXT("x"), 1, &textSize);
+		GetTextExtentPoint32(hMainDC, TEXT("x"), 1, &textSize);
 
 		// Transparent background so characters don't overwrite fill
-		SetBkMode(hDC, TRANSPARENT);
-		SetTextAlign(hDC, TA_LEFT | TA_TOP);
+		SetBkMode(hMainDC, TRANSPARENT);
+		SetTextAlign(hMainDC, TA_LEFT | TA_TOP);
 
 		// Draw a number of random "x" characters
 		for (int i = 0; i < 10; ++i) {
@@ -932,11 +934,11 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 			int pcty = rand() % 100;
 			int tx = p.x + (cellSize - textSize.cx) * pctx / 100;
 			int ty = p.y + (cellSize - textSize.cy) * pcty / 100;
-			TextOut(hDC, tx, ty, TEXT("x"), 1);
+			TextOut(hMainDC, tx, ty, TEXT("x"), 1);
 		}
 
 		// Cleanup
-		SelectObject(hDC, hOldFont);
+		SelectObject(hMainDC, hOldFont);
 		DeleteObject(hFont);
 	}
 
@@ -952,15 +954,15 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
 		        DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Segoe UI")
 		    );
-		HFONT hOldFont = (HFONT)SelectObject(hDC, hFont);
+		HFONT hOldFont = (HFONT)SelectObject(hMainDC, hFont);
 
 		// Set alignment and background mode
-		SetTextAlign(hDC, TA_CENTER);
-		SetBkMode(hDC, TRANSPARENT);
+		SetTextAlign(hMainDC, TA_CENTER);
+		SetBkMode(hMainDC, TRANSPARENT);
 
 		// Get text metrics
 		TEXTMETRIC tm;
-		GetTextMetrics(hDC, &tm);
+		GetTextMetrics(hMainDC, &tm);
 		int textHeight = tm.tmHeight;
 
 		// Compute center of square
@@ -968,10 +970,10 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		int centerY = p.y + cellSize / 2 - textHeight / 2;
 
 		// Draw the character
-		TextOut(hDC, centerX, centerY, TEXT("X"), 1);
+		TextOut(hMainDC, centerX, centerY, TEXT("X"), 1);
 
 		// Cleanup
-		SelectObject(hDC, hOldFont);
+		SelectObject(hMainDC, hOldFont);
 		DeleteObject(hFont);
 	}
 
@@ -992,7 +994,7 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 		int cy = randY + radius;
 
 		// Draw the filled circle
-		Ellipse(hDC, cx - radius, cy - radius, cx + radius, cy + radius);
+		Ellipse(hMainDC, cx - radius, cy - radius, cx + radius, cy + radius);
 
 		// Draw partial spokes
 		const int numLines = 4;
@@ -1002,8 +1004,8 @@ void GridMap::paintCellObject(HDC hDC, POINT p, ObjectType object)
 			int yOuter = cy + (int)(radius * sin(angle));
 			int xInner = cx + (int)((radius / 2.0) * cos(angle));
 			int yInner = cy + (int)((radius / 2.0) * sin(angle));
-			MoveToEx(hDC, xOuter, yOuter, NULL);
-			LineTo(hDC, xInner, yInner);
+			MoveToEx(hMainDC, xOuter, yOuter, NULL);
+			LineTo(hMainDC, xInner, yInner);
 		}
 	}
 }
@@ -1080,7 +1082,7 @@ void GridMap::generateFractalCurveRecursive(
 }
 
 // Draw a quadrant of a filled square, with fractal edge
-void GridMap::drawFillQuadrantRough(HDC hDC, POINT p, Direction dir)
+void GridMap::drawFillQuadrantRough(POINT p, Direction dir)
 {
 	// Get dimensions
 	int cellSize = getCellSizePixels();
@@ -1099,12 +1101,12 @@ void GridMap::drawFillQuadrantRough(HDC hDC, POINT p, Direction dir)
 	shape.push_back(a);
 
 	// Fill polygon with black
-	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-	Polygon(hDC, shape.data(), (int)(shape.size()));
+	SelectObject(hMainDC, GetStockObject(BLACK_BRUSH));
+	Polygon(hMainDC, shape.data(), (int)(shape.size()));
 }
 
 // Draw a quadrant of a filled square, with smooth edge
-void GridMap::drawFillQuadrantSmooth(HDC hDC, POINT p, Direction dir)
+void GridMap::drawFillQuadrantSmooth(POINT p, Direction dir)
 {
 	int cellSize = getCellSizePixels();
 	POINT center = { p.x + cellSize / 2, p.y + cellSize / 2 };
@@ -1117,12 +1119,12 @@ void GridMap::drawFillQuadrantSmooth(HDC hDC, POINT p, Direction dir)
 	POINT triangle[3] = { a, b, center };
 
 	// Fill with black
-	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-	Polygon(hDC, triangle, 3);
+	SelectObject(hMainDC, GetStockObject(BLACK_BRUSH));
+	Polygon(hMainDC, triangle, 3);
 }
 
 // Draw a quadrant of a filled space
-void GridMap::drawFillQuadrant(HDC hDC, POINT p, Direction dir)
+void GridMap::drawFillQuadrant(POINT p, Direction dir)
 {
 	assert(displayRoughEdges());
 
@@ -1133,10 +1135,10 @@ void GridMap::drawFillQuadrant(HDC hDC, POINT p, Direction dir)
 
 	// Rough-up if exposed edge
 	if (isExposedEdge(gc, dir)) {
-		drawFillQuadrantRough(hDC, p, dir);
+		drawFillQuadrantRough(p, dir);
 	}
 	else {
-		drawFillQuadrantSmooth(hDC, p, dir);
+		drawFillQuadrantSmooth(p, dir);
 	}
 }
 
@@ -1194,19 +1196,19 @@ bool GridMap::isExposedEdge(GridCoord gc, Direction dir) const
 }
 
 // Draw a filled space, possibly with fractal edges
-void GridMap::drawFillSpaceRough(HDC hDC, POINT p)
+void GridMap::drawFillSpaceRough(POINT p)
 {
 	assert(displayRoughEdges());
 
 	// Draw each quadrant
-	drawFillQuadrant(hDC, p, NORTH);
-	drawFillQuadrant(hDC, p, EAST);
-	drawFillQuadrant(hDC, p, SOUTH);
-	drawFillQuadrant(hDC, p, WEST);
+	drawFillQuadrant(p, NORTH);
+	drawFillQuadrant(p, EAST);
+	drawFillQuadrant(p, SOUTH);
+	drawFillQuadrant(p, WEST);
 }
 
 // Draw a diagonally filled space with fractal edge
-void GridMap::drawDiagonalFillRough(HDC hDC, POINT p, FloorType floor)
+void GridMap::drawDiagonalFillRough(POINT p, FloorType floor)
 {
 	assert(IsFloorDiagonalFill(floor));
 
@@ -1253,12 +1255,12 @@ void GridMap::drawDiagonalFillRough(HDC hDC, POINT p, FloorType floor)
 	shape.push_back(start);
 
 	// Fill polygon
-	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-	Polygon(hDC, shape.data(), (int)(shape.size()));
+	SelectObject(hMainDC, GetStockObject(BLACK_BRUSH));
+	Polygon(hMainDC, shape.data(), (int)(shape.size()));
 }
 
 // Draw a diagonally filled space (with smooth edge)
-void GridMap::drawDiagonalFillSmooth(HDC hDC, POINT p, FloorType floor)
+void GridMap::drawDiagonalFillSmooth(POINT p, FloorType floor)
 {
 	assert(IsFloorDiagonalFill(floor));
 	int cellSize = getCellSizePixels();
@@ -1292,6 +1294,6 @@ void GridMap::drawDiagonalFillSmooth(HDC hDC, POINT p, FloorType floor)
 	}
 
 	// Fill polygon
-	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-	Polygon(hDC, triangle, 3);
+	SelectObject(hMainDC, GetStockObject(BLACK_BRUSH));
+	Polygon(hMainDC, triangle, 3);
 }
