@@ -282,9 +282,9 @@ int GetGridSize()
 	return gridmap->getCellSizePixels();
 }
 
-void UpdateBkgdCell(HWND hWnd, int x, int y)
+void UpdateBkgdCell(HWND hWnd, GridCoord gc)
 {
-	gridmap->paintCell(BkgdDC, x, y, true);
+	gridmap->paintCell(BkgdDC, gc, true);
 	UpdateEntireWindow(hWnd);
 }
 
@@ -507,121 +507,122 @@ void MyPaintWindow(HWND hWnd)
 
 void MyLButtonHandler(HWND hWnd, LPARAM lParam)
 {
-	// Make sure we're on the map
-	int xPos = LOWORD(lParam) + GetHorzScrollPos(hWnd);
-	int yPos = HIWORD(lParam) + GetVertScrollPos(hWnd);
-	if (xPos >= gridmap->getWidthPixels()
-	        || yPos >= gridmap->getHeightPixels()) {
-		return;
-	}
+	// Extract click position
+	POINT p = {
+		LOWORD(lParam) + GetHorzScrollPos(hWnd),
+		HIWORD(lParam) + GetVertScrollPos(hWnd)
+	};
 
-	// Place floors
-	FloorType floor = GetFloorTypeFromMenu(selectedFeature);
-	if (floor != FLOOR_FAIL) {
-		FloorSelect(hWnd, floor, xPos, yPos);
-		return;
-	}
+	// Handle if we're on map area
+	if (p.x < (LONG) gridmap->getWidthPixels() &&
+	        p.y < (LONG) gridmap->getHeightPixels()) {
 
-	// Place objects
-	ObjectType object = GetObjectTypeFromMenu(selectedFeature);
-	if (object != OBJECT_FAIL) {
-		ObjectSelect(hWnd, object, xPos, yPos);
-		return;
-	}
+		// Place floors
+		FloorType floor = GetFloorTypeFromMenu(selectedFeature);
+		if (floor != FLOOR_FAIL) {
+			FloorSelect(hWnd, floor, p);
+			return;
+		}
 
-	// Place walls
-	WallType wall = GetWallTypeFromMenu(selectedFeature);
-	if (wall != WALL_FAIL) {
-		WallSelect(hWnd, wall, xPos, yPos);
-		return;
+		// Place objects
+		ObjectType object = GetObjectTypeFromMenu(selectedFeature);
+		if (object != OBJECT_FAIL) {
+			ObjectSelect(hWnd, object, p);
+			return;
+		}
+
+		// Place walls
+		WallType wall = GetWallTypeFromMenu(selectedFeature);
+		if (wall != WALL_FAIL) {
+			WallSelect(hWnd, wall, p);
+			return;
+		}
 	}
 }
 
-void GetMapCoordsFromWindow(int xWin, int yWin, int& xMap, int& yMap)
+GridCoord GetGridCoordFromWindow(POINT p)
 {
-	xMap = xWin / GetGridSize();
-	yMap = yWin / GetGridSize();
+	int gridSize = GetGridSize();
+	return {(unsigned)(p.x / gridSize), (unsigned)(p.y / gridSize)};
 }
 
-void FloorSelect(HWND hWnd, FloorType floor, int xPos, int yPos)
+void FloorSelect(HWND hWnd, FloorType floor, POINT p)
 {
-	// Find what cell we're in
-	int x, y;
-	GetMapCoordsFromWindow(xPos, yPos, x, y);
-
-	// If this is an actual change, do it & update window
-	if (gridmap->getCellFloor(x, y) != floor) {
-		gridmap->setCellFloor(x, y, floor);
+	GridCoord gc = GetGridCoordFromWindow(p);
+	if (gridmap->getCellFloor(gc) != floor) {
+		gridmap->setCellFloor(gc, floor);
 		if (IsFloorFillType(floor)) {
-			FillCell(hWnd, x, y);
+			FillCell(hWnd, gc);
 		}
 		else {
-			UpdateBkgdCell(hWnd, x, y);
+			UpdateBkgdCell(hWnd, gc);
 		}
 	}
 }
 
-void ObjectSelect(HWND hWnd, ObjectType object, int xPos, int yPos)
+void ObjectSelect(HWND hWnd, ObjectType object, POINT p)
 {
-	// Find what cell we're in
-	int x, y;
-	GetMapCoordsFromWindow(xPos, yPos, x, y);
-
-	// If this is an actual change, do it & update window
-	if (gridmap->getCellFloor(x, y) != FLOOR_FILL
-	        && gridmap->getCellObject(x, y) != object) {
-		gridmap->setCellObject(x, y, object);
-		UpdateBkgdCell(hWnd, x, y);
+	GridCoord gc = GetGridCoordFromWindow(p);
+	if (gridmap->getCellFloor(gc) != FLOOR_FILL
+	        && gridmap->getCellObject(gc) != object) {
+		gridmap->setCellObject(gc, object);
+		UpdateBkgdCell(hWnd, gc);
 	}
 }
 
-void WallSelect(HWND hWnd, WallType wall, int xPos, int yPos)
+void WallSelect(HWND hWnd, WallType wall, POINT p)
 {
 	// Set click sensitivity
-	int INC = GetGridSize() / 3;
+	int gridSize = GetGridSize();
+	int INC = gridSize / 3;
 
 	// Figure out what cell we're near
-	int xAdjust = xPos + INC;
-	int yAdjust = yPos + INC;
-	int x = xAdjust / GetGridSize();
-	int y = yAdjust / GetGridSize();
-	if (x >= gridmap->getWidthCells()
-	        || y >= gridmap->getHeightCells()) return;
+	int xAdjust = p.x + INC;
+	int yAdjust = p.y + INC;
+	GridCoord gc = {
+		(unsigned)(xAdjust / gridSize),
+		(unsigned)(yAdjust / gridSize)
+	};
 
-	// Find distance to nearby walls
-	int dx = xAdjust % GetGridSize();
-	int dy = yAdjust % GetGridSize();
+	// Handle if we're on map area
+	if (gc.x < gridmap->getWidthCells()
+	        && gc.y < gridmap->getHeightCells()) {
 
-	// Abort if not far from edge nor close to vertex
-	if (dx >= INC*2 && dy >= INC*2) return;
-	if (dx < INC*2 && dy < INC*2) return;
+		// Find distance to nearby walls
+		int dx = xAdjust % gridSize;
+		int dy = yAdjust % gridSize;
 
-	// Change appropriate wall
-	if (dx < dy) {
-		ChangeWestWall(hWnd, x, y, wall);
-	}
-	else {
-		ChangeNorthWall(hWnd, x, y, wall);
-	}
-}
+		// Abort if not far from edge nor close to vertex
+		if (dx >= INC*2 && dy >= INC*2) return;
+		if (dx < INC*2 && dy < INC*2) return;
 
-void ChangeWestWall(HWND hWnd, int x, int y, int newFeature)
-{
-	if (gridmap->canBuildWWall(x, y)
-	        && gridmap->getCellWWall(x,y) != newFeature) {
-		gridmap->setCellWWall(x, y, newFeature);
-		UpdateBkgdCell(hWnd, x-1, y);
-		UpdateBkgdCell(hWnd, x, y);
+		// Change appropriate wall
+		if (dx < dy) {
+			ChangeWestWall(hWnd, gc, wall);
+		}
+		else {
+			ChangeNorthWall(hWnd, gc, wall);
+		}
 	}
 }
 
-void ChangeNorthWall(HWND hWnd, int x, int y, int newFeature)
+void ChangeWestWall(HWND hWnd, GridCoord gc, int newFeature)
 {
-	if (gridmap->canBuildNWall(x, y)
-	        && gridmap->getCellNWall(x,y) != newFeature) {
-		gridmap->setCellNWall(x, y, newFeature);
-		UpdateBkgdCell(hWnd, x, y-1);
-		UpdateBkgdCell(hWnd, x, y);
+	if (gridmap->canBuildWWall(gc)
+	        && gridmap->getCellWWall(gc) != newFeature) {
+		gridmap->setCellWWall(gc, newFeature);
+		UpdateBkgdCell(hWnd, {gc.x-1, gc.y});
+		UpdateBkgdCell(hWnd, gc);
+	}
+}
+
+void ChangeNorthWall(HWND hWnd, GridCoord gc, int newFeature)
+{
+	if (gridmap->canBuildNWall(gc)
+	        && gridmap->getCellNWall(gc) != newFeature) {
+		gridmap->setCellNWall(gc, newFeature);
+		UpdateBkgdCell(hWnd, {gc.x, gc.y-1});
+		UpdateBkgdCell(hWnd, gc);
 	}
 }
 
@@ -661,38 +662,38 @@ void ToggleRoughEdges(HWND hWnd)
 	Now we need to wipe out any object, wipe ineligible adjacent walls,
 	and repaint all adjacent cells.
 */
-void FillCell(HWND hWnd, int x, int y)
+void FillCell(HWND hWnd, GridCoord gc)
 {
 	// Get height & width
-	int width = gridmap->getWidthCells();
-	int height = gridmap->getHeightCells();
+	unsigned width = gridmap->getWidthCells();
+	unsigned height = gridmap->getHeightCells();
 
 	// Clear elements
-	if (gridmap->getCellFloor(x, y) == FLOOR_FILL)
-		gridmap->setCellObject(x, y, OBJECT_NONE);
-	if (!gridmap->canBuildWWall(x, y))
-		gridmap->setCellWWall(x, y, WALL_OPEN);
-	if (!gridmap->canBuildNWall(x, y))
-		gridmap->setCellNWall(x, y, WALL_OPEN);
-	if (x+1 < width && !gridmap->canBuildWWall(x+1, y))
-		gridmap->setCellWWall(x+1, y, WALL_OPEN);
-	if (y+1 < width && !gridmap->canBuildNWall(x, y+1))
-		gridmap->setCellNWall(x, y+1, WALL_OPEN);
+	if (gridmap->getCellFloor(gc) == FLOOR_FILL)
+		gridmap->setCellObject(gc, OBJECT_NONE);
+	if (!gridmap->canBuildWWall(gc))
+		gridmap->setCellWWall(gc, WALL_OPEN);
+	if (!gridmap->canBuildNWall(gc))
+		gridmap->setCellNWall(gc, WALL_OPEN);
+	if (gc.x+1 < width && !gridmap->canBuildWWall({gc.x+1, gc.y}))
+		gridmap->setCellWWall({gc.x+1, gc.y}, WALL_OPEN);
+	if (gc.y+1 < height && !gridmap->canBuildNWall({gc.x, gc.y+1}))
+		gridmap->setCellNWall({gc.x, gc.y+1}, WALL_OPEN);
 
 	// Repaint prior cells
-	if (x-1 >= 0)
-		gridmap->paintCell(BkgdDC, x-1, y, true);
-	if (y-1 >= 0)
-		gridmap->paintCell(BkgdDC, x, y-1, true);
+	if (gc.x > 0)
+		gridmap->paintCell(BkgdDC, {gc.x-1, gc.y}, true);
+	if (gc.y > 0)
+		gridmap->paintCell(BkgdDC, {gc.x, gc.y-1}, true);
 
 	// Paint this cell
-	gridmap->paintCell(BkgdDC, x, y, true);
+	gridmap->paintCell(BkgdDC, gc, true);
 
 	// Repaint later cells
-	if (x+1 < width)
-		gridmap->paintCell(BkgdDC, x+1, y, true);
-	if (y+1 < height)
-		gridmap->paintCell(BkgdDC, x, y+1, true);
+	if (gc.x+1 < width)
+		gridmap->paintCell(BkgdDC, {gc.x+1, gc.y}, true);
+	if (gc.y+1 < height)
+		gridmap->paintCell(BkgdDC, {gc.x, gc.y+1}, true);
 
 	// Update window
 	UpdateEntireWindow(hWnd);

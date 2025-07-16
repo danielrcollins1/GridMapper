@@ -13,6 +13,13 @@
 #include <vector>
 
 /*
+	Structure for a grid coordinate.
+*/
+struct GridCoord {
+	unsigned x, y;
+};
+
+/*
 	Structure for a single grid cell.
 	Controls its owns floor, north & west walls, and any object.
 */
@@ -73,33 +80,32 @@ class GridMap {
 		~GridMap();
 
 		// Accessors
-		int getWidthCells();
-		int getHeightCells();
-		int getWidthPixels();
-		int getHeightPixels();
-		FloorType getCellFloor(unsigned x, unsigned y);
-		WallType getCellNWall(unsigned x, unsigned y);
-		WallType getCellWWall(unsigned x, unsigned y);
-		ObjectType getCellObject(unsigned x, unsigned y);
-		bool canBuildNWall(unsigned x, unsigned y);
-		bool canBuildWWall(unsigned x, unsigned y);
+		unsigned getWidthCells();
+		unsigned getHeightCells();
+		unsigned getWidthPixels();
+		unsigned getHeightPixels();
+		FloorType getCellFloor(GridCoord gc);
+		ObjectType getCellObject(GridCoord gc);
+		WallType getCellNWall(GridCoord gc);
+		WallType getCellWWall(GridCoord gc);
+		bool canBuildNWall(GridCoord gc);
+		bool canBuildWWall(GridCoord gc);
 		bool isChanged();
 		bool isFileLoadOk();
 		char* getFilename();
 
 		// Mutators
-		void setCellFloor(unsigned x, unsigned y, int floor);
-		void setCellNWall(unsigned x, unsigned y, int wall);
-		void setCellWWall(unsigned x, unsigned y, int wall);
-		void setCellObject(unsigned x, unsigned y, int object);
+		void setCellFloor(GridCoord gc, int floor);
+		void setCellObject(GridCoord gc, int object);
+		void setCellNWall(GridCoord gc, int wall);
+		void setCellWWall(GridCoord gc, int wall);
 		void clearMap(int floor);
 		void setFilename(char *name);
 
 		// Paint on a display context
 		void paint(HDC hDC);
-		void paintCell(
-		    HDC hDC, unsigned x, unsigned y, 
-			bool partialRepaint, int depth = 0);
+		void paintCell(HDC hDC, GridCoord gc,
+		               bool partialRepaint, int depth = 0);
 
 		// Save to file
 		int save();
@@ -118,28 +124,26 @@ class GridMap {
 	protected:
 
 		// Painting helper functions
-		void paintCellFloor(HDC hDC, int xPos, int yPos, GridCell cell);
-		void paintCellObject(HDC hDC, int xPos, int yPos, GridCell cell);
-		void paintCellNWall(HDC hDC, int xPos, int yPos, GridCell cell);
-		void paintCellWWall(HDC hDC, int xPos, int yPos, GridCell cell);
-		void LetterS(HDC hDC, int x, int y);
-		unsigned cellHash(int x, int y) const;
+		void paintCellFloor(HDC hDC, POINT p, FloorType floor);
+		void paintCellObject(HDC hDC, POINT p, ObjectType object);
+		void paintCellNWall(HDC hDC, POINT p, WallType wall);
+		void paintCellWWall(HDC hDC, POINT p, WallType wall);
+		void LetterS(HDC hDC, POINT p);
+		unsigned cellHash(GridCoord gc) const;
 		void makeStandardPens();
 
 		// Rough-edge painting functions
 		double randomUnit() const;
-		bool isExposedEdge(int x, int y, Direction dir);
-		void getVertexPoints(
-		    int x, int y, POINT& a, POINT& b, Direction dir);
-		void drawFillSpaceRough(HDC hDC, int x, int y);
-		void drawFillQuadrant(HDC hDC, int x, int y, Direction dir);
-		void drawFillQuadrantSmooth(HDC hDC, int x, int y, Direction dir);
-		void drawFillQuadrantRough(HDC hDC, int x, int y, Direction dir);
-		void drawDiagonalFillSmooth(HDC hDC, int x, int y, FloorType floor);
-		void drawDiagonalFillRough(HDC hDC, int x, int y, FloorType floor);
+		bool isExposedEdge(GridCoord gc, Direction dir);
+		void getVertexPoints(POINT p, POINT& a, POINT& b, Direction dir);
+		void drawFillSpaceRough(HDC hDC, POINT p);
+		void drawFillQuadrant(HDC hDC, POINT p, Direction dir);
+		void drawFillQuadrantSmooth(HDC hDC, POINT p, Direction dir);
+		void drawFillQuadrantRough(HDC hDC, POINT p, Direction dir);
+		void drawDiagonalFillSmooth(HDC hDC, POINT p, FloorType floor);
+		void drawDiagonalFillRough(HDC hDC, POINT p, FloorType floor);
 		void generateFractalCurveRecursive(
-		    std::vector<POINT>& points,
-		    int x1, int y1, int x2, int y2,
+		    POINT start, POINT end, std::vector<POINT>& path,
 		    double displacement, int depthToGo);
 
 	private:
@@ -148,7 +152,7 @@ class GridMap {
 		char filename[GRID_FILENAME_MAX];
 		bool changed, fileLoadOk;
 		HPEN ThinGrayPen = NULL, ThickBlackPen = NULL;
-		
+
 		// Constants for fractal edges
 		const int RECURSION_LIMIT = 4;
 		const double DISPLACEMENT_SCALE = 0.25;

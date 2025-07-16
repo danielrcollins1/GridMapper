@@ -14,7 +14,7 @@
 
 // Function prototypes
 int  GetGridSize();
-void UpdateBkgdCell(HWND hWnd, int x, int y);
+void UpdateBkgdCell(HWND hWnd, GridCoord gc);
 void UpdateEntireWindow(HWND hWnd);
 void SetScrollRange(HWND hWnd, bool zeroPos);
 void HorzScrollHandler(HWND hWnd, WPARAM wParam);
@@ -25,13 +25,13 @@ int GetVertScrollPos(HWND hWnd);
 void MyKeyHandler(HWND hWnd, WPARAM wParam);
 void MyPaintWindow(HWND hWnd);
 void MyLButtonHandler(HWND hWnd, LPARAM lParam);
-void FloorSelect(HWND hWnd, FloorType floor, int xPos, int yPos);
-void ObjectSelect(HWND hWnd, ObjectType object, int xPos, int yPos);
-void WallSelect(HWND hWnd, WallType wall, int xPos, int yPos);
-void ChangeWestWall(HWND hWnd, int x, int y, int newFeature);
-void ChangeNorthWall(HWND hWnd, int x, int y, int newFeature);
+void FloorSelect(HWND hWnd, FloorType floor, POINT p);
+void ObjectSelect(HWND hWnd, ObjectType object, POINT p);
+void WallSelect(HWND hWnd, WallType wall, POINT p);
+void ChangeWestWall(HWND hWnd, GridCoord gc, int newFeature);
+void ChangeNorthWall(HWND hWnd, GridCoord gc, int newFeature);
 void ClearMap(HWND hWnd, bool open);
-void FillCell(HWND hWnd, int x, int y);
+void FillCell(HWND hWnd, GridCoord gc);
 void SetSelectedFeature(HWND hWnd, int feature);
 bool OkDiscardChanges(HWND hWnd);
 void SetBkgdDC(HWND hWnd);
@@ -46,7 +46,7 @@ void CopyMap(HWND hWnd);
 void PrintMap(HWND hWnd);
 void ToggleGridLines(HWND hWnd);
 void ToggleRoughEdges(HWND hWnd);
-void GetMapCoordsFromWindow(int xWin, int yWin, int& xMap, int& yMap);
+GridCoord GetGridCoordFromWindow(POINT p);
 LRESULT CALLBACK NewDialog(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK GridSizeDialog(HWND, UINT, WPARAM, LPARAM);
 FloorType GetFloorTypeFromMenu(int menuID);
