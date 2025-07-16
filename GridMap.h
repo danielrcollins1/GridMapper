@@ -104,8 +104,8 @@ class GridMap {
 
 		// Paint on a display context
 		void paint(HDC hDC);
-		void paintCell(HDC hDC, GridCoord gc,
-		               bool partialRepaint, int depth = 0);
+		void paintCell(
+			GridCoord gc, bool partialRepaint, int recursionDepth = 0);
 
 		// Save to file
 		int save();
@@ -154,6 +154,7 @@ class GridMap {
 
 		// Drawing context handles
 		HPEN ThinGrayPen = NULL, ThickBlackPen = NULL;
+		HDC hMainDC;
 
 		// Constants for fractal edges
 		const int RECURSION_LIMIT = 4;

@@ -302,7 +302,7 @@ unsigned GetGridSize()
 
 void UpdateBkgdCell(HWND hWnd, GridCoord gc)
 {
-	gridmap->paintCell(BkgdDC, gc, true);
+	gridmap->paintCell(gc, true);
 	UpdateEntireWindow(hWnd);
 }
 
@@ -699,18 +699,18 @@ void FillCell(HWND hWnd, GridCoord gc)
 
 	// Repaint prior cells
 	if (gc.x > 0)
-		gridmap->paintCell(BkgdDC, {gc.x-1, gc.y}, true);
+		gridmap->paintCell({gc.x-1, gc.y}, true);
 	if (gc.y > 0)
-		gridmap->paintCell(BkgdDC, {gc.x, gc.y-1}, true);
+		gridmap->paintCell({gc.x, gc.y-1}, true);
 
 	// Paint this cell
-	gridmap->paintCell(BkgdDC, gc, true);
+	gridmap->paintCell(gc, true);
 
 	// Repaint later cells
 	if (gc.x+1 < width)
-		gridmap->paintCell(BkgdDC, {gc.x+1, gc.y}, true);
+		gridmap->paintCell({gc.x+1, gc.y}, true);
 	if (gc.y+1 < height)
-		gridmap->paintCell(BkgdDC, {gc.x, gc.y+1}, true);
+		gridmap->paintCell({gc.x, gc.y+1}, true);
 
 	// Update window
 	UpdateEntireWindow(hWnd);

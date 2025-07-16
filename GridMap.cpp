@@ -440,9 +440,10 @@ unsigned GridMap::cellHash(GridCoord gc) const
 // Paint entire map on device context
 void GridMap::paint(HDC hDC)
 {
+	hMainDC = hDC;
 	for (unsigned x = 0; x < width; x++) {
 		for (unsigned y = 0; y < height; y++) {
-			paintCell(hDC, {x, y}, false);
+			paintCell({x, y}, false);
 		}
 	}
 }
@@ -460,10 +461,10 @@ void GridMap::paint(HDC hDC)
 	and you'll see some artifacts.)
 */
 void GridMap::paintCell(
-    HDC hDC, GridCoord gc, bool partialRepaint, int depth)
+    GridCoord gc, bool partialRepaint, int recursionDepth)
 {
 	// Handle recursion limit for open redraws
-	if (depth > 1 && IsFloorSemiOpen(getCellFloor(gc))) {
+	if (recursionDepth > 1 && IsFloorSemiOpen(getCellFloor(gc))) {
 		return;
 	}
 
@@ -473,36 +474,36 @@ void GridMap::paintCell(
 	// Paint everything controlled by this cell
 	int cellSize = getCellSizePixels();
 	POINT p = {(LONG)(gc.x * cellSize), (LONG)(gc.y * cellSize)};
-	paintCellFloor(hDC, p, getCellFloor(gc));
-	paintCellObject(hDC, p, getCellObject(gc));
-	paintCellNWall(hDC, p, getCellNWall(gc));
-	paintCellWWall(hDC, p, getCellWWall(gc));
+	paintCellFloor(hMainDC, p, getCellFloor(gc));
+	paintCellObject(hMainDC, p, getCellObject(gc));
+	paintCellNWall(hMainDC, p, getCellNWall(gc));
+	paintCellWWall(hMainDC, p, getCellWWall(gc));
 
 	// Repaint walls east & south if needed
 	if (partialRepaint) {
 		if (gc.x+1 < width) {
 			paintCellWWall(
-			    hDC, {p.x + cellSize, p.y}, getCellWWall({gc.x+1, gc.y}));
+			    hMainDC, {p.x + cellSize, p.y}, getCellWWall({gc.x+1, gc.y}));
 		}
 		if (gc.y+1 < height) {
 			paintCellNWall(
-			    hDC, {p.x, p.y + cellSize}, getCellNWall({gc.x, gc.y+1}));
+			    hMainDC, {p.x, p.y + cellSize}, getCellNWall({gc.x, gc.y+1}));
 		}
 	}
 
 	// Repaint neighbors in case of bleeding rough edges
 	if (displayRoughEdges() && IsFloorSemiOpen(getCellFloor(gc))) {
 		if (gc.x > 0) {
-			paintCell(hDC, {gc.x-1, gc.y}, true, depth + 1);
+			paintCell({gc.x-1, gc.y}, true, recursionDepth + 1);
 		}
 		if (gc.y > 0) {
-			paintCell(hDC, {gc.x, gc.y-1}, true, depth + 1);
+			paintCell({gc.x, gc.y-1}, true, recursionDepth + 1);
 		}
 		if (gc.x+1 < width) {
-			paintCell(hDC, {gc.x+1, gc.y}, true, depth + 1);
+			paintCell({gc.x+1, gc.y}, true, recursionDepth + 1);
 		}
 		if (gc.y+1 < height) {
-			paintCell(hDC, {gc.x, gc.y+1}, true, depth + 1);
+			paintCell({gc.x, gc.y+1}, true, recursionDepth + 1);
 		}
 	}
 }
