@@ -23,16 +23,16 @@ const char DefaultFileExt[] = "gmap";
 const char FileFilterStr[] = "GridMapper Files (*.gmap)\0*.gmap\0";
 
 // Global variables
+HWND hMainWnd;
+HINSTANCE hInst;
 HDC BkgdDC;
 HPEN BkgdPen;
 HBITMAP BkgdBitmap;
-HINSTANCE hInst;
 TCHAR szTitle[MAX_LOADSTRING];
 TCHAR szWindowClass[MAX_LOADSTRING];
 GridMap *gridmap = NULL;
 int selectedFeature = 0;
 bool LButtonCapture = false;
-char cmdLine[GRID_FILENAME_MAX] = "\0";
 
 // Function prototypes
 ATOM MyRegisterClass(HINSTANCE hInstance);
@@ -53,44 +53,36 @@ int APIENTRY WinMain(
     LPSTR     lpCmdLine,
     int       nCmdShow)
 {
-	MSG msg;
-	HACCEL hAccelTable;
-
-	// Copy command line without quotes
-	if (strlen(lpCmdLine) >= 2) {
-		strncpy(cmdLine, lpCmdLine+1, GRID_FILENAME_MAX);
-		cmdLine[strlen(lpCmdLine)-2] = '\0';
-	}
-
 	// Initialize global strings
 	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadString(hInstance, IDC_GRIDMAPPER, szWindowClass, MAX_LOADSTRING);
 	MyRegisterClass(hInstance);
 
 	// Perform application initialization
-	if (!InitInstance(hInstance, nCmdShow)) {
-		return FALSE;
-	}
-	hAccelTable = LoadAccelerators(hInstance, (LPCTSTR)IDC_GRIDMAPPER);
+	if (InitInstance(hInstance, nCmdShow)) {
 
-	// Main message loop
-	while (GetMessage(&msg, NULL, 0, 0)) {
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+		// Initialize our custom application
+		InitGridMapper();
+
+		// Load hotkey accelerators
+		HACCEL hAccelTable =
+		    LoadAccelerators(hInstance, (LPCTSTR)IDC_GRIDMAPPER);
+
+		// Main message loop
+		MSG msg;
+		while (GetMessage(&msg, NULL, 0, 0)) {
+			if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
 		}
+		return msg.wParam;
 	}
-	return msg.wParam;
+	return FALSE;
 }
 
 /*
 	Register the window class.
-
-	This function and its usage is only necessary if you want this code
-	to be compatible with Win32 systems prior to the 'RegisterClassEx'
-	function that was added to Windows 95. It's important to call this function
-	so that the application will get 'well formed' small icons associated
-	with it.
 */
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
@@ -107,6 +99,8 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.lpszMenuName	= (LPCSTR)IDC_GRIDMAPPER;
 	wcex.lpszClassName	= szWindowClass;
 	wcex.hIconSm		= LoadIcon(wcex.hInstance, (LPCTSTR)IDI_SMALL);
+
+	// Register the class
 	return RegisterClassEx(&wcex);
 }
 
@@ -117,27 +111,51 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 */
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-	HWND hWnd;
 	hInst = hInstance;
-	hWnd =
+	hMainWnd =
 	    CreateWindow(
 	        szWindowClass, szTitle,
 	        WS_OVERLAPPEDWINDOW | WS_HSCROLL | WS_VSCROLL,
 	        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL,
 	        hInstance, NULL);
-	if (!hWnd) {
-		return FALSE;
+	if (hMainWnd) {
+		ShowWindow(hMainWnd, nCmdShow);
+		UpdateWindow(hMainWnd);
+		return TRUE;
 	}
-	ShowWindow(hWnd, nCmdShow);
-	UpdateWindow(hWnd);
+	return FALSE;
+}
 
-	// Application startup
+/*
+	Initializes custom stuff for GridMapper application.
+*/
+void InitGridMapper()
+{
 	srand((unsigned int) time(NULL));
 	BkgdPen = CreatePen(PS_SOLID, 1, 0x00808080);
-	if (!strlen(cmdLine) || !NewMapFromFile(hWnd, cmdLine)) {
-		NewMapFromSpecs(hWnd, DefaultMapWidth, DefaultMapHeight);
+	InitFirstMap();
+}
+
+/*
+	Initialize the first map on application startup.
+*/
+void InitFirstMap()
+{
+	// Try to open file from command line
+	int argc;
+	LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	if (argc > 1) {
+		char buffer[512];
+		WideCharToMultiByte(
+		    CP_UTF8, 0, argv[1], -1, buffer, sizeof(buffer), NULL, NULL);
+		NewMapFromFile(hMainWnd, buffer);
 	}
-	return TRUE;
+	LocalFree(argv);
+
+	// If no file loaded, make a blank map
+	if (!gridmap) {
+		NewMapFromSpecs(hMainWnd, DefaultMapWidth, DefaultMapHeight);
+	}
 }
 
 /*
@@ -892,9 +910,11 @@ bool NewMapFromFile(HWND hWnd, char *filename)
 		return false;
 	}
 	else if (!newmap->isFileLoadOk()) {
+		char msg[512];
+		sprintf_s(
+		    msg, sizeof(msg), "Could not read map file:\n%s", filename);
 		MessageBox(
-		    hWnd, "Could not read map file.", "Error",
-		    MB_OK|MB_ICONERROR);
+		    hWnd, msg, "Error", MB_OK|MB_ICONERROR);
 		delete newmap;
 		return false;
 	}

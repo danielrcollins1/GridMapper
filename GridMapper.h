@@ -13,6 +13,8 @@
 #include "GridMap.h"
 
 // Function prototypes
+void InitGridMapper();
+void InitFirstMap();
 int  GetGridSize();
 void UpdateBkgdCell(HWND hWnd, GridCoord gc);
 void UpdateEntireWindow(HWND hWnd);
