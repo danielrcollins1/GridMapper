@@ -80,19 +80,19 @@ class GridMap {
 		~GridMap();
 
 		// Accessors
-		unsigned getWidthCells();
-		unsigned getHeightCells();
-		unsigned getWidthPixels();
-		unsigned getHeightPixels();
-		FloorType getCellFloor(GridCoord gc);
-		ObjectType getCellObject(GridCoord gc);
-		WallType getCellNWall(GridCoord gc);
-		WallType getCellWWall(GridCoord gc);
-		bool canBuildNWall(GridCoord gc);
-		bool canBuildWWall(GridCoord gc);
-		bool isChanged();
-		bool isFileLoadOk();
-		char* getFilename();
+		unsigned getWidthCells() const;
+		unsigned getHeightCells() const;
+		unsigned getWidthPixels() const;
+		unsigned getHeightPixels() const;
+		FloorType getCellFloor(GridCoord gc) const;
+		ObjectType getCellObject(GridCoord gc) const;
+		WallType getCellNWall(GridCoord gc) const;
+		WallType getCellWWall(GridCoord gc) const;
+		bool canBuildNWall(GridCoord gc) const;
+		bool canBuildWWall(GridCoord gc) const;
+		bool isChanged() const;
+		bool isFileLoadOk() const;
+		const char* getFilename() const;
 
 		// Mutators
 		void setCellFloor(GridCoord gc, int floor);
@@ -134,8 +134,8 @@ class GridMap {
 
 		// Rough-edge painting functions
 		double randomUnit() const;
-		bool isExposedEdge(GridCoord gc, Direction dir);
-		void getVertexPoints(POINT p, POINT& a, POINT& b, Direction dir);
+		bool isExposedEdge(GridCoord gc, Direction dir) const;
+		void getVertexPoints(POINT p, POINT& a, POINT& b, Direction dir) const;
 		void drawFillSpaceRough(HDC hDC, POINT p);
 		void drawFillQuadrant(HDC hDC, POINT p, Direction dir);
 		void drawFillQuadrantSmooth(HDC hDC, POINT p, Direction dir);

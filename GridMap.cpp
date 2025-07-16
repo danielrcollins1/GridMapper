@@ -247,61 +247,61 @@ int GridMap::save()
 // Accessors
 //------------------------------------------------------------------
 
-unsigned GridMap::getWidthCells()
+unsigned GridMap::getWidthCells() const
 {
 	return width;
 }
 
-unsigned GridMap::getHeightCells()
+unsigned GridMap::getHeightCells() const
 {
 	return height;
 }
 
-unsigned GridMap::getWidthPixels()
+unsigned GridMap::getWidthPixels() const
 {
 	return width * getCellSizePixels();
 }
 
-unsigned GridMap::getHeightPixels()
+unsigned GridMap::getHeightPixels() const
 {
 	return height * getCellSizePixels();
 }
 
-FloorType GridMap::getCellFloor(GridCoord gc)
+FloorType GridMap::getCellFloor(GridCoord gc) const
 {
 	assert(gc.x < width && gc.y < height);
 	return (FloorType) grid[gc.x][gc.y].floor;
 }
 
-WallType GridMap::getCellNWall(GridCoord gc)
+WallType GridMap::getCellNWall(GridCoord gc) const
 {
 	assert(gc.x < width && gc.y < height);
 	return (WallType) grid[gc.x][gc.y].nwall;
 }
 
-WallType GridMap::getCellWWall(GridCoord gc)
+WallType GridMap::getCellWWall(GridCoord gc) const
 {
 	assert(gc.x < width && gc.y < height);
 	return (WallType) grid[gc.x][gc.y].wwall;
 }
 
-ObjectType GridMap::getCellObject(GridCoord gc)
+ObjectType GridMap::getCellObject(GridCoord gc) const
 {
 	assert(gc.x < width && gc.y < height);
 	return (ObjectType) grid[gc.x][gc.y].object;
 }
 
-bool GridMap::isChanged()
+bool GridMap::isChanged() const
 {
 	return changed;
 }
 
-bool GridMap::isFileLoadOk()
+bool GridMap::isFileLoadOk() const
 {
 	return fileLoadOk;
 }
 
-char* GridMap::getFilename()
+const char* GridMap::getFilename() const
 {
 	return filename;
 }
@@ -310,7 +310,7 @@ char* GridMap::getFilename()
 	Can we erect a wall partition to the north of a given cell?
 	Prohibited if spaced filled on either side.
 */
-bool GridMap::canBuildNWall(GridCoord gc)
+bool GridMap::canBuildNWall(GridCoord gc) const
 {
 	if (gc.y == 0) {            // on top border
 		return false;
@@ -338,7 +338,7 @@ bool GridMap::canBuildNWall(GridCoord gc)
 	Can we erect a wall partition to the west of a given cell?
 	Prohibited if spaced filled on either side.
 */
-bool GridMap::canBuildWWall(GridCoord gc)
+bool GridMap::canBuildWWall(GridCoord gc) const
 {
 	if (gc.x == 0) {            // on left border
 		return false;
@@ -1010,7 +1010,8 @@ double GridMap::randomUnit() const
 }
 
 // Find the two vertices of a space in a given direction
-void GridMap::getVertexPoints(POINT p, POINT& a, POINT& b, Direction dir)
+void GridMap::getVertexPoints(
+    POINT p, POINT& a, POINT& b, Direction dir) const
 {
 	int cellSize = getCellSizePixels();
 	switch (dir) {
@@ -1139,7 +1140,7 @@ void GridMap::drawFillQuadrant(HDC hDC, POINT p, Direction dir)
 	(boundary between fill & open spaces, possibly roughed)
 	Assume given cell is filled inside indicated edge
 */
-bool GridMap::isExposedEdge(GridCoord gc, Direction dir)
+bool GridMap::isExposedEdge(GridCoord gc, Direction dir) const
 {
 	// Note: This could maybe be expanded to diagonal fills
 	assert(getCellFloor(gc) == FLOOR_FILL);
