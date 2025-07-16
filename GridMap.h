@@ -121,7 +121,7 @@ class GridMap {
 		void toggleRoughEdges();
 		void toggleNoGrid();
 
-	protected:
+	private:
 
 		// Painting helper functions
 		void paintCellFloor(HDC hDC, POINT p, FloorType floor);
@@ -145,12 +145,14 @@ class GridMap {
 		void generateFractalCurveRecursive(
 		    POINT start, POINT end, std::vector<POINT>& path,
 		    double displacement, int depthToGo);
-
-	private:
+		
+		// Data fields
 		GridCell **grid;
 		unsigned width, height, displayCode;
 		char filename[GRID_FILENAME_MAX];
 		bool changed, fileLoadOk;
+
+		// Drawing context handles
 		HPEN ThinGrayPen = NULL, ThickBlackPen = NULL;
 
 		// Constants for fractal edges
