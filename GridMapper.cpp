@@ -295,7 +295,7 @@ void DestroyObjects()
 // Application-specific functions
 //-----------------------------------------------------------------------------
 
-int GetGridSize()
+unsigned GetGridSize()
 {
 	return gridmap->getCellSizePixels();
 }
@@ -426,8 +426,8 @@ void ScrollWheelHandler(HWND hWnd, WPARAM wParam)
 	// Handle zoom-in or out (Ctrl pressed)
 	if (wParam & MK_CONTROL) {
 		int newSize = GetGridSize() + steps;
-		newSize = std::min(newSize, gridmap->getCellSizeMax());
-		newSize = std::max(newSize, gridmap->getCellSizeMin());
+		newSize = std::min(newSize, (int) gridmap->getCellSizeMax());
+		newSize = std::max(newSize, (int) gridmap->getCellSizeMin());
 		ChangeGridSize(hWnd, newSize);
 	}
 
@@ -447,7 +447,7 @@ void ScrollWheelHandler(HWND hWnd, WPARAM wParam)
 	}
 }
 
-int GetHorzScrollPos(HWND hWnd)
+unsigned GetHorzScrollPos(HWND hWnd)
 {
 	SCROLLINFO info = {
 		sizeof(SCROLLINFO), SIF_PAGE|SIF_POS, 0, 0, 0, 0, 0
@@ -456,7 +456,7 @@ int GetHorzScrollPos(HWND hWnd)
 	return info.nPos;
 }
 
-int GetVertScrollPos(HWND hWnd)
+unsigned GetVertScrollPos(HWND hWnd)
 {
 	SCROLLINFO info = {
 		sizeof(SCROLLINFO), SIF_PAGE|SIF_POS, 0, 0, 0, 0, 0
@@ -527,8 +527,8 @@ void MyLButtonHandler(HWND hWnd, LPARAM lParam)
 {
 	// Extract click position
 	POINT p = {
-		LOWORD(lParam) + GetHorzScrollPos(hWnd),
-		HIWORD(lParam) + GetVertScrollPos(hWnd)
+		(LONG)(LOWORD(lParam) + GetHorzScrollPos(hWnd)),
+		(LONG)(HIWORD(lParam) + GetVertScrollPos(hWnd))
 	};
 
 	// Handle if we're on map area
@@ -1105,7 +1105,7 @@ LRESULT CALLBACK GridSizeDialog(
 				        FALSE);
 
 				// Check size too small
-				if (newSize < gridmap->getCellSizeMin()) {
+				if (newSize < (int) gridmap->getCellSizeMin()) {
 					std::stringstream message;
 					message << "Minimum grid size is "
 					        << gridmap->getCellSizeMin()
@@ -1116,7 +1116,7 @@ LRESULT CALLBACK GridSizeDialog(
 				}
 
 				// Check size too large
-				else if (newSize > gridmap->getCellSizeMax()) {
+				else if (newSize > (int) gridmap->getCellSizeMax()) {
 					std::stringstream message;
 					message << "Maximum grid size is "
 					        << gridmap->getCellSizeMax()

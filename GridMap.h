@@ -80,6 +80,9 @@ class GridMap {
 		~GridMap();
 
 		// Accessors
+		bool isChanged() const;
+		bool isFileLoadOk() const;
+		const char* getFilename() const;
 		unsigned getWidthCells() const;
 		unsigned getHeightCells() const;
 		unsigned getWidthPixels() const;
@@ -90,9 +93,6 @@ class GridMap {
 		WallType getCellWWall(GridCoord gc) const;
 		bool canBuildNWall(GridCoord gc) const;
 		bool canBuildWWall(GridCoord gc) const;
-		bool isChanged() const;
-		bool isFileLoadOk() const;
-		const char* getFilename() const;
 
 		// Mutators
 		void setCellFloor(GridCoord gc, int floor);
@@ -111,13 +111,13 @@ class GridMap {
 		int save();
 
 		// Display settings
-		static int getCellSizeMin();
-		static int getCellSizeMax();
-		static int getCellSizeDefault();
-		int getCellSizePixels() const;
+		static unsigned getCellSizeMin();
+		static unsigned getCellSizeMax();
+		static unsigned getCellSizeDefault();
+		unsigned getCellSizePixels() const;
 		bool displayRoughEdges() const;
 		bool displayNoGrid() const;
-		void setCellSizePixels(int cellSize);
+		void setCellSizePixels(unsigned cellSize);
 		void toggleRoughEdges();
 		void toggleNoGrid();
 

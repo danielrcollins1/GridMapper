@@ -79,31 +79,31 @@ const unsigned int MASK_ROUGH_EDGES = 1u << 30;
 const unsigned int MASK_HIDE_GRID = 1u << 31;
 
 // Get cell size minimum
-int GridMap::getCellSizeMin()
+unsigned GridMap::getCellSizeMin()
 {
 	return 12;
 }
 
 // Get cell size default
-int GridMap::getCellSizeDefault()
+unsigned GridMap::getCellSizeDefault()
 {
 	return 20;
 }
 
 // Get cell size maximum
-int GridMap::getCellSizeMax()
+unsigned GridMap::getCellSizeMax()
 {
 	return (int) MASK_CELL_SIZE;
 }
 
 // Get current cell size
-int GridMap::getCellSizePixels() const
+unsigned GridMap::getCellSizePixels() const
 {
 	return (int)(displayCode & MASK_CELL_SIZE);
 }
 
 // Set current cell size
-void GridMap::setCellSizePixels(int cellSize)
+void GridMap::setCellSizePixels(unsigned cellSize)
 {
 	assert(cellSize >= getCellSizeMin());
 	assert(cellSize <= getCellSizeMax());

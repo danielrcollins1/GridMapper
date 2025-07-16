@@ -15,15 +15,15 @@
 // Function prototypes
 void InitGridMapper();
 void InitFirstMap();
-int  GetGridSize();
+unsigned GetGridSize();
+unsigned GetHorzScrollPos(HWND hWnd);
+unsigned GetVertScrollPos(HWND hWnd);
 void UpdateBkgdCell(HWND hWnd, GridCoord gc);
 void UpdateEntireWindow(HWND hWnd);
 void SetScrollRange(HWND hWnd, bool zeroPos);
 void HorzScrollHandler(HWND hWnd, WPARAM wParam);
 void VertScrollHandler(HWND hWnd, WPARAM wParam);
 void ScrollWheelHandler(HWND hWnd, WPARAM wParam);
-int GetHorzScrollPos(HWND hWnd);
-int GetVertScrollPos(HWND hWnd);
 void MyKeyHandler(HWND hWnd, WPARAM wParam);
 void MyPaintWindow(HWND hWnd);
 void MyLButtonHandler(HWND hWnd, LPARAM lParam);
